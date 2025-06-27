@@ -1,6 +1,6 @@
 from ollama import chat
 
-with open("MalaqueIIIApplication.md", "r", encoding="utf-8") as file:
+with open("MAlaque III - Approve_Application.md", "r", encoding="utf-8") as file:
     doc = file.read()
 
 # define prompt
@@ -21,9 +21,7 @@ Only return the JSON object without additional text. To help in finding the stud
 /nothink /no_think
 '''
 
-# print(doc + prompt)
-
-
+# change this soon
 stream = chat(
     model = 'qwen3',
     messages=[{'role': 'user', 'content': prompt}],

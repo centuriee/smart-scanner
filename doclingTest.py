@@ -1,16 +1,10 @@
-# docling parsing test
-
-import json
 import os
-import requests
-from ollama import chat
-from ollama import ChatResponse
 from docling.document_converter import DocumentConverter
 
 # source can be local path or URL
 # docName = input("Enter PDF name with extension: ")
 
-source = "testDocuments/MalaqueIIIApplication.pdf"
+source = "testDocuments/MAlaque III - Approve_Application.pdf"
 # print("Source: " + source)
 converter = DocumentConverter()
 result = converter.convert(source)
@@ -20,6 +14,7 @@ filename = os.path.splitext(os.path.basename(source))[0]
 jsonFilename = f"{filename}.json"
 mdFilename = f"{filename}.md"
 
+"""
 # JSON
 resultDict = result.document.export_to_dict()
 
@@ -28,8 +23,8 @@ with open(jsonFilename, "w", encoding = "utf-8") as f:
     json.dump(resultDict, f, ensure_ascii = False, indent = 4)
 
 print(f"\nSaved JSON to {jsonFilename}") # success
-
 """
+
 # MARKDOWN
 doc = result.document.export_to_markdown()
 
@@ -38,4 +33,3 @@ with open(mdFilename, "w", encoding = "utf-8") as f:
     f.write(doc)
 
 print(f"\nSaved Markdown to {mdFilename}") # success
-"""
