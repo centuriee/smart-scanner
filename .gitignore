@@ -1,0 +1,4 @@
+testDocuments/*
+*.json
+*.md
+__pycache__
