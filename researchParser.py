@@ -46,6 +46,7 @@ QUERY: You are a parsing assistant tasked to extract the following fields from t
     "title": "...",
     "authors": [...],
     "presenting_author": "...",
+    "conference": "...",
     "conference_date": "...",
     "location": "...",
     "abstract": "...",
