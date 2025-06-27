@@ -25,7 +25,7 @@ Only return the JSON object without additional text. To help in finding the stud
 
 
 stream = chat(
-    model = 'qwen3:32b',
+    model = 'qwen3',
     messages=[{'role': 'user', 'content': prompt}],
     stream = True,
 )
