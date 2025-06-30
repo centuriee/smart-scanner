@@ -3,6 +3,7 @@ import sys
 from docling.document_converter import DocumentConverter
 from ollama import chat
 
+# PDF PARSER
 # source can be local path or URL
 source = "testDocuments/" + input("Enter PDF name with extension (should be in testDocuments folder): ")
 
@@ -12,33 +13,31 @@ else:
     print("\n" + source + " does not exist. Exiting program.\n")
     sys.exit(1)
 
+# page range for rs papers = 5, might adjust soon
+pageRange = (1, 5)
+
 # print("Source: " + source)
 converter = DocumentConverter()
-result = converter.convert(source)
+result = converter.convert(source, page_range = pageRange)
 
-# name for generated files based on pdf file name
-# filename = os.path.splitext(os.path.basename(source))[0]
-# jsonFilename = f"{filename}.json"
-# mdFilename = f"{filename}.md"
-
-"""
-# JSON
-resultDict = result.document.export_to_dict()
-
-# write to json file
-with open(jsonFilename, "w", encoding = "utf-8") as f:
-    json.dump(resultDict, f, ensure_ascii = False, indent = 4)
-
-print(f"\nSaved JSON to {jsonFilename}") # success
-"""
-
+# GENERATE MARKDOWN FILE FOR CHECKING, COMMENT IF NOT NEEDED
 # convert to markdown file
 doc = result.document.export_to_markdown()
 
+# filename for md file
+filename = os.path.splitext(os.path.basename(source))[0]
+mdFilename = f"{filename}.md"
+
+# write to md file
+with open(mdFilename, "w", encoding = "utf-8") as f:
+    f.write(doc)
+
+print(f"\nSaved Markdown to {mdFilename}") # success
+
+# AI ANALYSIS
 print("\nFile parsed. Extracting info...\n")
 
-
-# define prompt
+# constructing prompt
 prompt = f'''{doc}
 \n\n
 QUERY: You are a parsing assistant tasked to extract the following fields from the inputted research paper in READme format and return them strictly in JSON format:
@@ -57,12 +56,14 @@ Only return the JSON object without additional text. To help in finding the stud
 /nothink /no_think
 '''
 
-# change this soon
+# PASS PROMPT
+# change soon
 stream = chat(
     model = 'qwen3',
     messages=[{'role': 'user', 'content': prompt}],
     stream = True,
 )
 
+# PRINT MODEL OUTPUT
 for chunk in stream:
   print(chunk['message']['content'], end='', flush = True)
