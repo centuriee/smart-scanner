@@ -1,48 +1,14 @@
 import os
-import sys
 import json
-from docling.document_converter import DocumentConverter
 from ollama import chat
 from pydantic import BaseModel
 
-
-# PDF PARSER
 # source can be local path or URL
-source = "testDocuments/" + input("Enter PDF name with extension (should be in testDocuments folder): ")
+source = input("Enter MD name with extension: ")
 
-if os.path.exists(source):
-    print("\n" + source + " exists. Converting file...\n")
-else:
-    print("\n" + source + " does not exist. Exiting program.\n")
-    sys.exit(1)
+with open(source, "r", encoding="utf-8") as file:
+    doc = file.read()
 
-# filenames for output files
-filename = os.path.splitext(os.path.basename(source))[0]
-mdFilename = f"{filename}.md"
-jsonFilename = f"{filename}.json"
-
-# page range for rs papers = 5, might adjust soon
-pageRange = (1, 5)
-
-# print("Source: " + source)
-converter = DocumentConverter()
-result = converter.convert(source, page_range = pageRange)
-
-# GENERATE MARKDOWN FILE FOR CHECKING, COMMENT IF NOT NEEDED
-# convert to markdown file
-doc = result.document.export_to_markdown()
-
-# write to md file
-with open(mdFilename, "w", encoding = "utf-8") as f:
-    f.write(doc)
-
-print(f"\nSaved Markdown to {mdFilename}") # success
-
-
-# AI ANALYSIS
-print("\nFile parsed. Extracting info...\n")
-
-# JSON metadata format
 # JSON metadata format
 class Metadata(BaseModel):
     title: str
@@ -73,7 +39,7 @@ To help in finding the study's title, it is usually stylized as a ## MARKDOWN HE
 /nothink /no_think
 '''
 
-# PASS PROMPT TO AI
+# PASS PROMPT
 stream = chat(
     model = 'qwen3',
     messages = [
@@ -90,7 +56,11 @@ stream = chat(
 metadata = Metadata.model_validate_json(stream.message.content)
 print(metadata)
 
-# WRITE TO JSON FILE
+# name for generated files based on pdf file name
+filename = os.path.splitext(os.path.basename(source))[0]
+jsonFilename = f"{filename}.json"
+
+# write to json file
 with open(jsonFilename, "w", encoding = "utf-8") as f:
     json.dump(metadata.model_dump(), f, ensure_ascii = False, indent = 4)
 

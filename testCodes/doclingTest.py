@@ -4,7 +4,7 @@ from docling.document_converter import DocumentConverter
 # source can be local path or URL
 # docName = input("Enter PDF name with extension: ")
 
-source = "testDocuments/MAlaque III - Approve_Application.pdf"
+source = "testDocuments/Malaque III - Approve_Application.pdf"
 # print("Source: " + source)
 converter = DocumentConverter()
 result = converter.convert(source)
