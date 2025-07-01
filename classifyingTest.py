@@ -1,29 +1,32 @@
-import os
-import json
 from ollama import chat
 from pydantic import BaseModel
 
 # source can be local path or URL
-source = input("Enter MD name with extension: ")
+# source = input("Enter MD name with extension: ")
+source = "MAlaque III - Approve_Application for OIL Trael Grant in Griffith University Gold coast AU.md"
 
 with open(source, "r", encoding="utf-8") as file:
     doc = file.read()
 
 # JSON metadata format
-class Metadata(BaseModel):
-    title: str
-    authors: list[str]
-    presenting_author: str
-    conference: str
-    conference_date: str
-    location: str
-    abstract: str
-    keywords: list[str]
+class Classification(BaseModel):
+    subject: str
+    type: str
 
 # constructing prompt
 prompt = f'''{doc}
 \n\n
-QUERY: You are a model tasked to decipher and identify the subject of the inputted document. To help in finding the subject, it is indicated near the start of the document, usually starting with "SUBJECT: ".
+QUERY: You are a model tasked to decipher and identify the complete subject and classification of the inputted document. There are 7 ways to classify a document: 
+
+- ACA (academic)
+- ADM (administration and management)
+- CRE (creative work, research and extension)
+- FIN (financial)
+- LEG (legal)
+- PER (personnel)
+- SAS (student affairs and services)
+
+The subject is indicated near the start of the document, usually starting with "SUBJECT: ". After identifying the subject, ensure that its capitalization is consistent to the Markdown file.
 \n\n
 /nothink /no_think
 '''
@@ -37,10 +40,10 @@ stream = chat(
             'content': prompt
         }
     ],
-    stream = True,
+    stream = False,
+    format = Classification.model_json_schema()
 )
 
 # PRINT MODEL OUTPUT
-for chunk in stream:
-  print(chunk['message']['content'], end='', flush = True)
-
+classification = Classification.model_validate_json(stream.message.content)
+print(classification)

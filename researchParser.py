@@ -43,7 +43,6 @@ print(f"\nSaved Markdown to {mdFilename}") # success
 print("\nFile parsed. Extracting info...\n")
 
 # JSON metadata format
-# JSON metadata format
 class Metadata(BaseModel):
     title: str
     authors: list[str]
