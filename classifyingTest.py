@@ -2,8 +2,7 @@ from ollama import chat
 from pydantic import BaseModel
 
 # source can be local path or URL
-# source = input("Enter MD name with extension: ")
-source = "MAlaque III - Approve_Application for OIL Trael Grant in Griffith University Gold coast AU.md"
+source = input("Enter MD name with extension: ")
 
 with open(source, "r", encoding="utf-8") as file:
     doc = file.read()
