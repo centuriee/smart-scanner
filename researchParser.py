@@ -43,7 +43,6 @@ print(f"\nSaved Markdown to {mdFilename}") # success
 print("\nFile parsed. Extracting info...\n")
 
 # JSON metadata format
-# JSON metadata format
 class Metadata(BaseModel):
     title: str
     authors: list[str]
@@ -88,7 +87,7 @@ stream = chat(
 
 # PRINT MODEL OUTPUT
 metadata = Metadata.model_validate_json(stream.message.content)
-print(metadata)
+# print(metadata)
 
 # WRITE TO JSON FILE
 with open(jsonFilename, "w", encoding = "utf-8") as f:
