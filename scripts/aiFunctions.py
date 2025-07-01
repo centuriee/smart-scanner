@@ -16,12 +16,13 @@ class Metadata(BaseModel):
 class Classification(BaseModel):
     subject: str
     type: str
+    funding: Optional[str] = None
 
 class Document(BaseModel):
     classification: Classification
     metadata: Optional[Metadata] = None
 
-def analyzeDocument(doc) -> Document:
+def analyzeDocument(doc, filename) -> Document:
 
     # classification prompt
     classifyPrompt = f'''{doc}
@@ -31,12 +32,15 @@ def analyzeDocument(doc) -> Document:
     - ACA (academic)
     - ADM (administration and management)
     - CRE (creative work, research and extension)
+        - under CRE, there are two funding types: INT (internally) and EXT (externally). if the document is not CRE, funding must be NULL.
     - FIN (financial)
     - LEG (legal)
     - PER (personnel)
     - SAS (student affairs and services)
 
-    The subject is indicated near the start of the document, usually starting with "SUBJECT: ". After identifying the subject, ensure that its capitalization is consistent to the Markdown file.
+    The subject is indicated near the start of the document, usually starting with "SUBJECT: ". If it is difficult to determine the subject of the document, you can use the document's filename to infer it: {filename}. After identifying the subject, ensure that its capitalization is consistent to the Markdown file.
+
+    For the type and funding of the application, simply write the three letter code.
     
     /nothink /no_think
     '''
@@ -55,11 +59,14 @@ def analyzeDocument(doc) -> Document:
 
     classification = Classification.model_validate_json(classifyResponse.message.content)
 
+    if classification.funding == "null" or classification.type.upper() != "CRE":
+        classification.funding = None
+
     # metadata prompt, ignore if not CRE
     metadata = None
     if classification.type.upper() == "CRE":
         metadataPrompt = f'''{doc}
-        \n\n
+
         QUERY: You are a parsing assistant tasked to extract the following fields from the inputted research paper in READme format and return them strictly in JSON format:
         {{
             "title": "...",
@@ -72,7 +79,9 @@ def analyzeDocument(doc) -> Document:
             "keywords": [...]
         }}
         To help in finding the study's title, it is usually stylized as a ## MARKDOWN HEADING, with the other fields such as authors, abstract and keywords directly following it. The abstract usually starts with "Abstract: " while the keywords start with "Keywords: ".
-        \n\n
+
+        For instances wherein a field is not stated within the document, leave it as null.
+
         /nothink /no_think
         '''
 
@@ -90,5 +99,9 @@ def analyzeDocument(doc) -> Document:
         )
 
         metadata = Metadata.model_validate_json(metadataResponse.message.content)
+
+        for field, value in metadata.model_dump().items():
+            if isinstance(value, str) and value.strip().lower() == "null":
+                setattr(metadata, field, None)
 
     return Document(classification = classification, metadata = metadata)
