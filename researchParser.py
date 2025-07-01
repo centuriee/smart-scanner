@@ -88,7 +88,7 @@ stream = chat(
 
 # PRINT MODEL OUTPUT
 metadata = Metadata.model_validate_json(stream.message.content)
-print(metadata)
+# print(metadata)
 
 # WRITE TO JSON FILE
 with open(jsonFilename, "w", encoding = "utf-8") as f:
