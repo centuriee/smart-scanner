@@ -9,35 +9,26 @@ from PySide6.QtWidgets import (
 )
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from docling.document_converter import DocumentConverter
+
+file_stack = []  # LIFO stack
+stack_lock = threading.Lock()  # Ensure thread-safe access to the stack
 
 class MyEventHandler(FileSystemEventHandler):
-    def __init__(self, source_folder, destination_folder):
+    def __init__(self, source_folder):
         super().__init__()
         self.source_folder = source_folder
-        self.destination_folder = destination_folder
 
     def on_created(self, event):
-        for filename in os.listdir(self.source_folder):
-            source_path = os.path.join(self.source_folder, filename)
-            destination_path = os.path.join(self.destination_folder, filename)
-
-            if os.path.isfile(source_path):
-                shutil.move(source_path, destination_path)
-                print(f"Moved '{filename}' to '{self.destination_folder}'.")
+        if not event.is_directory:
+            with stack_lock:
+                file_stack.insert(0, event.src_path)
+                print(f"File created -> added to bottom of stack: {event.src_path}")
 
     def on_moved(self, event):
-        source = "testDocuments/Malaque III - Approve_Application.pdf"
-        converter = DocumentConverter()
-        result = converter.convert(source)
-
-        filename = os.path.splitext(os.path.basename(source))[0]
-        mdFilename = f"{filename}.md"
-
-        doc = result.document.export_to_markdown()
-        with open(mdFilename, "w", encoding="utf-8") as f:
-            f.write(doc)
-        print(f"\nSaved Markdown to {mdFilename}")
+        if not event.is_directory:
+            with stack_lock:
+                file_stack.insert(0, event.dest_path)
+                print(f"File moved -> added to bottom of stack: {event.dest_path}")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -49,9 +40,10 @@ class MainWindow(QMainWindow):
 
         self.observer = None
         self.observer_thread = None
+        self.mover_thread = None
         self.monitoring = False
 
-        # Create UI
+        # UI Setup
         central_widget = QWidget()
         layout = QVBoxLayout()
 
@@ -70,17 +62,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def choose_directory(self):
-        selected = QFileDialog.getExistingDirectory(
-            self, "Select Directory", self.selected_dir
-        )
+        selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selected_dir)
         if selected:
             self.selected_dir = selected
             self.label.setText(f"Selected Directory: {selected}")
         else:
             self.label.setText("No directory selected.")
-
-    def the_button_was_clicked(self):
-        print(f"Current selected directory: {self.selected_dir}")
 
     def toggle_monitoring(self):
         if not self.monitoring:
@@ -89,20 +76,25 @@ class MainWindow(QMainWindow):
             self.stop_observer()
 
     def start_observer(self):
-        print("Starting file observer...")
+        print("Starting observer and stack mover...")
         self.monitoring = True
         self.buttonRun.setText("Stop")
 
+        # Scan the directory ONCE
+        for filename in os.listdir(self.selected_dir):
+            full_path = os.path.join(self.selected_dir, filename)
+            if os.path.isfile(full_path):
+                with stack_lock:
+                    file_stack.append(full_path)  # Add to top of stack
+                    print(f"Initial scan added: {full_path}")
+
+        # Start watchdog observer
         def run_observer():
-            event_handler = MyEventHandler(
-                source_folder=self.selected_dir,
-                destination_folder=self.destination_dir
-            )
+            event_handler = MyEventHandler(self.selected_dir)
             self.observer = Observer()
-            self.observer.schedule(event_handler, self.selected_dir, recursive=True)
+            self.observer.schedule(event_handler, self.selected_dir, recursive=False)
             self.observer.start()
             print(f"Watching folder: {self.selected_dir}")
-
             try:
                 while self.monitoring:
                     time.sleep(1)
@@ -113,6 +105,26 @@ class MainWindow(QMainWindow):
 
         self.observer_thread = threading.Thread(target=run_observer, daemon=True)
         self.observer_thread.start()
+
+        # Start a thread to move files from stack
+        def move_files():
+            while self.monitoring:
+                if file_stack:
+                    with stack_lock:
+                        filepath = file_stack.pop()  # Top of the stack
+                    if os.path.exists(filepath):
+                        filename = os.path.basename(filepath)
+                        destination_path = os.path.join(self.destination_dir, filename)
+                        try:
+                            shutil.move(filepath, destination_path)
+                            print(f"Moved: {filename} → {self.destination_dir}")
+                        except Exception as e:
+                            print(f"Error moving {filename}: {e}")
+                else:
+                    time.sleep(1)  # Avoid busy waiting
+
+        self.mover_thread = threading.Thread(target=move_files, daemon=True)
+        self.mover_thread.start()
 
     def stop_observer(self):
         print("Stopping file observer...")
