@@ -1,66 +1,126 @@
-import shutil
+import sys
 import os
+import shutil
 import time
+import threading
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget,
+    QVBoxLayout, QPushButton, QLabel, QFileDialog
+)
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from docling.document_converter import DocumentConverter
 
-source_folder = "C:\\Users\ACER-PC\Downloads\\test_project\source"
-destination_folder = "C:\Users\ACER-PC\Downloads\\test_project\destination"
-
-
 class MyEventHandler(FileSystemEventHandler):
-    def on_created(self, event):
-        for filename in os.listdir(source_folder):
-            source_path = os.path.join(source_folder, filename)
-            destination_path = os.path.join(destination_folder, filename)
+    def __init__(self, source_folder, destination_folder):
+        super().__init__()
+        self.source_folder = source_folder
+        self.destination_folder = destination_folder
 
-            if os.path.isfile(source_path):  # Ensure it's a file, not a subdirectory
+    def on_created(self, event):
+        for filename in os.listdir(self.source_folder):
+            source_path = os.path.join(self.source_folder, filename)
+            destination_path = os.path.join(self.destination_folder, filename)
+
+            if os.path.isfile(source_path):
                 shutil.move(source_path, destination_path)
-                print(f"Moved '{filename}' to '{destination_folder}'.")
+                print(f"Moved '{filename}' to '{self.destination_folder}'.")
 
     def on_moved(self, event):
         source = "testDocuments/Malaque III - Approve_Application.pdf"
-        # print("Source: " + source)
         converter = DocumentConverter()
         result = converter.convert(source)
 
-        # name for generated files based on pdf file name
         filename = os.path.splitext(os.path.basename(source))[0]
-        jsonFilename = f"{filename}.json"
         mdFilename = f"{filename}.md"
 
-        """
-        # JSON
-        resultDict = result.document.export_to_dict()
-
-        # write to json file
-        with open(jsonFilename, "w", encoding = "utf-8") as f:
-            json.dump(resultDict, f, ensure_ascii = False, indent = 4)
-
-        print(f"\nSaved JSON to {jsonFilename}") # success
-        """
-
-        # MARKDOWN
         doc = result.document.export_to_markdown()
-
-        # write to doc file
-        with open(mdFilename, "w", encoding = "utf-8") as f:
+        with open(mdFilename, "w", encoding="utf-8") as f:
             f.write(doc)
+        print(f"\nSaved Markdown to {mdFilename}")
 
-        print(f"\nSaved Markdown to {mdFilename}") # success
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Directory Chooser + File Monitor")
+        self.default_dir = os.path.dirname(os.path.abspath(__file__))
+        self.selected_dir = self.default_dir
+        self.destination_dir = r"C:\Users\ACER-PC\Downloads\test_project\destination"
 
+        self.observer = None
+        self.observer_thread = None
+        self.monitoring = False
+
+        # Create UI
+        central_widget = QWidget()
+        layout = QVBoxLayout()
+
+        self.label = QLabel(f"Default Directory: {self.default_dir}")
+        self.buttonDir = QPushButton("Browse for Directory")
+        self.buttonDir.clicked.connect(self.choose_directory)
+
+        self.buttonRun = QPushButton("Run")
+        self.buttonRun.clicked.connect(self.toggle_monitoring)
+
+        layout.addWidget(self.label)
+        layout.addWidget(self.buttonDir)
+        layout.addWidget(self.buttonRun)
+
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+    def choose_directory(self):
+        selected = QFileDialog.getExistingDirectory(
+            self, "Select Directory", self.selected_dir
+        )
+        if selected:
+            self.selected_dir = selected
+            self.label.setText(f"Selected Directory: {selected}")
+        else:
+            self.label.setText("No directory selected.")
+
+    def the_button_was_clicked(self):
+        print(f"Current selected directory: {self.selected_dir}")
+
+    def toggle_monitoring(self):
+        if not self.monitoring:
+            self.start_observer()
+        else:
+            self.stop_observer()
+
+    def start_observer(self):
+        print("Starting file observer...")
+        self.monitoring = True
+        self.buttonRun.setText("Stop")
+
+        def run_observer():
+            event_handler = MyEventHandler(
+                source_folder=self.selected_dir,
+                destination_folder=self.destination_dir
+            )
+            self.observer = Observer()
+            self.observer.schedule(event_handler, self.selected_dir, recursive=True)
+            self.observer.start()
+            print(f"Watching folder: {self.selected_dir}")
+
+            try:
+                while self.monitoring:
+                    time.sleep(1)
+            finally:
+                self.observer.stop()
+                self.observer.join()
+                print("Observer stopped.")
+
+        self.observer_thread = threading.Thread(target=run_observer, daemon=True)
+        self.observer_thread.start()
+
+    def stop_observer(self):
+        print("Stopping file observer...")
+        self.monitoring = False
+        self.buttonRun.setText("Run")
 
 if __name__ == "__main__":
-    path_to_watch = "C:\\Users\ACER-PC\Downloads\\test_project\source"  # Replace with the actual path
-    event_handler = MyEventHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path_to_watch, recursive=True)
-    observer.start()
-
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())

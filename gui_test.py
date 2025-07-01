@@ -1,7 +1,8 @@
 import sys
 import os
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog
+    QApplication, QMainWindow, QWidget,
+    QVBoxLayout, QPushButton, QLabel, QFileDialog
 )
 
 class MainWindow(QMainWindow):
@@ -11,10 +12,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Directory Chooser")
         self.default_dir = os.path.dirname(os.path.abspath(__file__))
 
+        # Create central widget and layout
         central_widget = QWidget()
         layout = QVBoxLayout()
 
         self.label = QLabel(f"Default Directory: {self.default_dir}")
+
         self.buttonDir = QPushButton("Browse for Directory")
         self.buttonDir.clicked.connect(self.choose_directory)
 
@@ -22,16 +25,20 @@ class MainWindow(QMainWindow):
         self.buttonPush.setCheckable(True)
         self.buttonPush.clicked.connect(self.the_button_was_clicked)
 
-        # Set the central widget of the Window.
+        self.buttonRun = QPushButton("Run")
+        self.buttonRun.clicked.connect(self.run_button_clicked)  # Empty for now
+
         layout.addWidget(self.label)
         layout.addWidget(self.buttonDir)
         layout.addWidget(self.buttonPush)
-    
+        layout.addWidget(self.buttonRun)
+
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
         # Store the current directory
         self.selected_dir = self.default_dir
+
     def choose_directory(self):
         selected = QFileDialog.getExistingDirectory(
             self,
@@ -46,6 +53,10 @@ class MainWindow(QMainWindow):
 
     def the_button_was_clicked(self):
         print(f"Current selected directory: {self.selected_dir}")
+
+    def run_button_clicked(self):
+        # Function is empty for now
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
