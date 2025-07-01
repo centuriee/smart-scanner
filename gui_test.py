@@ -1,16 +1,54 @@
-from PySide6.QtWidgets import QApplication, QWidget
-
-# Only needed for access to command line arguments
 import sys
+import os
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog
+)
 
-# You need one (and only one) QApplication instance per application.
-# Pass in sys.argv to allow command line arguments for your app.
-# If you know you won't use command line arguments QApplication([]) works too.
-app = QApplication(sys.argv)
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
-# Create a Qt widget, which will be our window.
-window = QWidget()
-window.show()  # IMPORTANT!!!!! Windows are hidden by default.
+        self.setWindowTitle("Directory Chooser")
+        self.default_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Start the event loop.
-app.exec()
+        central_widget = QWidget()
+        layout = QVBoxLayout()
+
+        self.label = QLabel(f"Default Directory: {self.default_dir}")
+        self.buttonDir = QPushButton("Browse for Directory")
+        self.buttonDir.clicked.connect(self.choose_directory)
+
+        self.buttonPush = QPushButton("Press Me!")
+        self.buttonPush.setCheckable(True)
+        self.buttonPush.clicked.connect(self.the_button_was_clicked)
+
+        # Set the central widget of the Window.
+        layout.addWidget(self.label)
+        layout.addWidget(self.buttonDir)
+        layout.addWidget(self.buttonPush)
+    
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+        # Store the current directory
+        self.selected_dir = self.default_dir
+    def choose_directory(self):
+        selected = QFileDialog.getExistingDirectory(
+            self,
+            "Select Directory",
+            self.selected_dir
+        )
+        if selected:
+            self.selected_dir = selected
+            self.label.setText(f"Selected Directory: {selected}")
+        else:
+            self.label.setText("No directory selected.")
+
+    def the_button_was_clicked(self):
+        print(f"Current selected directory: {self.selected_dir}")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
