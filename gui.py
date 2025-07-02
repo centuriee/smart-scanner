@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import time
+from datetime import datetime
 import threading
 import json
 from PySide6.QtWidgets import (
@@ -12,7 +13,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 from scripts.documentParser import parseDocument
-from scripts.fileFunctions import getFilename, getSource, writeToMarkdown, writeToJSON
+from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON
 from scripts.aiFunctions import analyzeDocument
 
 file_stack = []  # LIFO stack
@@ -110,22 +111,32 @@ class MainWindow(QMainWindow):
         if selected:
             self.selectedSrc = selected
             self.labelsrc.setText(f"Selected Directory: {selected}")
+            self.append_to_terminal(f"Source directory set to {selected}")
         else:
             self.labelsrc.setText("No directory selected.")
+            self.append_to_terminal(f"Source directory set to none")
 
     def choose_dst(self):
         selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selectedDir)
         if selected:
             self.selectedDir = selected
             self.labeldst.setText(f"Selected Directory: {selected}")
+            self.append_to_terminal(f"Destination directory set to {selected}")
         else:
             self.labeldst.setText("No directory selected.")
+            self.append_to_terminal(f"Destination directory set to none")
 
     def toggle_monitoring(self):
         if not self.monitoring:
+            self.append_to_terminal("Program starting.")
             self.start_observer()
         else:
+            self.append_to_terminal("Program stopped.")
             self.stop_observer()
+
+    def append_to_terminal(self, text: str):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.terminal.append(f"[{timestamp}] {text}")
 
     def start_observer(self):
         print("Starting observer and stack mover...")
@@ -171,13 +182,18 @@ class MainWindow(QMainWindow):
                             # PROCESSING
                             filename = getFilename(filepath, 0)
                             print(f"Processing {filename}...\n")
+                            self.append_to_terminal(f"Processing {filename}.")
+                            self.append_to_terminal("Starting parsing...")
                             doc = parseDocument(filepath)
+                            self.append_to_terminal(f"{filename} successfully parsed.")
 
                             # for checking purposes, uncomment if not needed
                             mdFilename = getFilename(filepath, 2)
                             writeToMarkdown(doc, mdFilename)
 
+                            self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)
+                            self.append_to_terminal(f"Metadata successfully extracted, document classified as {documentMetadata.classification.type.upper()}.")
                             jsonFilename = getFilename(filepath, 1)
                             json_path = os.path.join(os.path.dirname(filepath), jsonFilename)
                             writeToJSON(documentMetadata, json_path)
@@ -194,17 +210,18 @@ class MainWindow(QMainWindow):
                             # CREATE FOLDER IF NEEDED
                             type_folder_path = os.path.join(self.selectedDir, doc_type)
                             os.makedirs(type_folder_path, exist_ok=True)
-
                             # MOVE ORIGINAL FILE
                             filename = os.path.basename(filepath)
                             destination_path = os.path.join(type_folder_path, filename)
                             shutil.move(filepath, destination_path)
                             print(f"Moved file to destination: {destination_path}")
+                            self.append_to_terminal(f"{filename} moved to {destination_path}.")
 
                             # MOVE JSON FILE
                             json_destination_path = os.path.join(type_folder_path, jsonFilename)
                             shutil.move(json_path, json_destination_path)
                             print(f"Generated JSON file at destination")
+                            self.append_to_terminal(f"JSON file created at {json_destination_path}.")
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
