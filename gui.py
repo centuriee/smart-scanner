@@ -214,14 +214,14 @@ class MainWindow(QMainWindow):
                             filename = os.path.basename(filepath)
                             destination_path = os.path.join(type_folder_path, filename)
                             shutil.move(filepath, destination_path)
-                            print(f"Moved file to destination: {destination_path}")
-                            self.append_to_terminal(f"{filename} moved to {destination_path}.")
+                            print(f"Moved file to destination: {type_folder_path}")
+                            self.append_to_terminal(f"{filename} moved to {type_folder_path}.")
 
                             # MOVE JSON FILE
                             json_destination_path = os.path.join(type_folder_path, jsonFilename)
                             shutil.move(json_path, json_destination_path)
                             print(f"Generated JSON file at destination")
-                            self.append_to_terminal(f"JSON file created at {json_destination_path}.")
+                            self.append_to_terminal(f"JSON file created at {type_folder_path}.")
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
