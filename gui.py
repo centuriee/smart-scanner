@@ -5,8 +5,8 @@ import time
 import threading
 import json
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QPushButton, QLabel, QFileDialog
+    QApplication, QMainWindow, QWidget, QHBoxLayout,
+    QVBoxLayout, QPushButton, QLabel, QFileDialog, QTextEdit
 )
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -39,9 +39,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Directory Chooser + File Monitor")
-        self.default_dir = os.path.dirname(os.path.abspath(__file__))
-        self.selected_src = self.default_dir
-        self.selected_dir = self.default_dir
+        self.defaultDir = os.path.dirname(os.path.abspath(__file__))
+        self.selectedSrc = self.defaultDir
+        self.selectedDir = self.defaultDir
 
         self.observer = None
         self.observer_thread = None
@@ -49,41 +49,74 @@ class MainWindow(QMainWindow):
         self.monitoring = False
 
         # UI Setup
-        central_widget = QWidget()
-        layout = QVBoxLayout()
+        centralWidget = QWidget()
+        self.setCentralWidget(centralWidget)
 
-        self.labelsrc = QLabel(f"Default Source Directory: {self.default_dir}")
+        # terminal
+        self.terminalWrapper = QVBoxLayout()
+        self.terminal_label = QLabel("terminal")
+        self.terminal = QTextEdit()
+        self.terminal.setReadOnly(True)
+        self.terminalWrapper.addWidget(self.terminal_label)
+        self.terminalWrapper.addWidget(self.terminal)
+
+        # queue
+        self.queueWrapper = QVBoxLayout()
+        self.queue_label = QLabel("queue")
+        self.queue = QTextEdit()
+        self.queue.setFixedWidth(200)
+        self.queue.setReadOnly(True)
+        self.queueWrapper.addWidget(self.queue_label)
+        self.queueWrapper.addWidget(self.queue)
+
+        topLayout = QHBoxLayout()
+        topLayout.addLayout(self.terminalWrapper, 3)
+        topLayout.addLayout(self.queueWrapper, 1)
+
+        self.sourceWrapper = QVBoxLayout()
+        self.labelsrc = QLabel(f"Default Source Directory: {self.defaultDir}")
+        self.labelsrc.setWordWrap(True)
         self.buttonSrc = QPushButton("Browse for Source")
         self.buttonSrc.clicked.connect(self.choose_src)
+        self.sourceWrapper.addWidget(self.labelsrc)
+        self.sourceWrapper.addWidget(self.buttonSrc)
 
-        self.labeldst = QLabel(f"Default Destination Directory: {self.default_dir}")
+        self.destinationWrapper = QVBoxLayout()
+        self.labeldst = QLabel(f"Default Destination Directory: {self.defaultDir}")
+        self.labeldst.setWordWrap(True)
         self.buttonDst = QPushButton("Browse for Destination")
         self.buttonDst.clicked.connect(self.choose_dst)
+        self.destinationWrapper.addWidget(self.labeldst)
+        self.destinationWrapper.addWidget(self.buttonDst)
 
         self.buttonRun = QPushButton("Run")
+        self.buttonRun.setFixedSize(60, 40)
         self.buttonRun.clicked.connect(self.toggle_monitoring)
 
-        layout.addWidget(self.labelsrc)
-        layout.addWidget(self.buttonSrc)
-        layout.addWidget(self.labeldst)
-        layout.addWidget(self.buttonDst)
-        layout.addWidget(self.buttonRun)
+        bottomLayout = QHBoxLayout()
+        bottomLayout.addLayout(self.sourceWrapper)
+        bottomLayout.addLayout(self.destinationWrapper)
+        bottomLayout.addWidget(self.buttonRun)
 
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout()
+        layout.addLayout(topLayout)
+        layout.addLayout(bottomLayout)
+
+        centralWidget.setLayout(layout)
+        self.setCentralWidget(centralWidget)
 
     def choose_src(self):
-        selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selected_src)
+        selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selectedSrc)
         if selected:
-            self.selected_src = selected
+            self.selectedSrc = selected
             self.labelsrc.setText(f"Selected Directory: {selected}")
         else:
             self.labelsrc.setText("No directory selected.")
 
     def choose_dst(self):
-        selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selected_dir)
+        selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selectedDir)
         if selected:
-            self.selected_dir = selected
+            self.selectedDir = selected
             self.labeldst.setText(f"Selected Directory: {selected}")
         else:
             self.labeldst.setText("No directory selected.")
@@ -100,8 +133,8 @@ class MainWindow(QMainWindow):
         self.buttonRun.setText("Stop")
 
         # Scan the directory ONCE
-        for filename in os.listdir(self.selected_src):
-            full_path = os.path.join(self.selected_src, filename)
+        for filename in os.listdir(self.selectedSrc):
+            full_path = os.path.join(self.selectedSrc, filename)
             if os.path.isfile(full_path):
                 with stack_lock:
                     file_stack.append(full_path)  # Add to top of stack
@@ -109,11 +142,11 @@ class MainWindow(QMainWindow):
 
         # Start watchdog observer
         def run_observer():
-            event_handler = MyEventHandler(self.selected_src)
+            event_handler = MyEventHandler(self.selectedSrc)
             self.observer = Observer()
-            self.observer.schedule(event_handler, self.selected_src, recursive=False)
+            self.observer.schedule(event_handler, self.selectedSrc, recursive=False)
             self.observer.start()
-            print(f"Watching folder: {self.selected_src}")
+            print(f"Watching folder: {self.selectedSrc}")
             try:
                 while self.monitoring:
                     time.sleep(1)
@@ -159,7 +192,7 @@ class MainWindow(QMainWindow):
                             doc_type = classification.get("type", "Uncategorized")  # fallback if missing
 
                             # CREATE FOLDER IF NEEDED
-                            type_folder_path = os.path.join(self.selected_dir, doc_type)
+                            type_folder_path = os.path.join(self.selectedDir, doc_type)
                             os.makedirs(type_folder_path, exist_ok=True)
 
                             # MOVE ORIGINAL FILE
@@ -189,5 +222,6 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
+    window.resize(750, 500)
     window.show()
     sys.exit(app.exec())
