@@ -26,10 +26,11 @@ def getFilename(source, index):
         return f"{filename}.md"
     
 def writeToMarkdown(text, filename):
-    with open(filename, "w", encoding = "utf-8") as f:
+    path = f"testDocuments/markdownFiles/{filename}"
+    with open(path, "w", encoding = "utf-8") as f:
         f.write(text)
 
-    print(f"\nSaved Markdown to {filename}") # success
+    print(f"\nSaved Markdown to {path}") # success
 
 def writeToJSON(data, filename):
     with open(filename, "w", encoding = "utf-8") as f:

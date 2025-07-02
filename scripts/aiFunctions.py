@@ -38,7 +38,7 @@ def analyzeDocument(doc, filename) -> Document:
     - PER (personnel)
     - SAS (student affairs and services)
 
-    The subject is indicated near the start of the document, usually starting with "SUBJECT: ". If it is difficult to determine the subject of the document, you can use the document's filename to infer it: {filename}. After identifying the subject, ensure that its capitalization is consistent to the Markdown file.
+    The subject is usually indicated near the start of the document. However, if it is difficult to determine the subject from the content, you must use the full filename of the document as the subject: {filename}. Ensure that the capitalization matches the filename exactly.
 
     For the type and funding of the application, simply write the three letter code.
     

@@ -136,16 +136,20 @@ class MainWindow(QMainWindow):
                     if os.path.exists(filepath):
                         try:
                             # PROCESSING
+                            filename = getFilename(filepath, 0)
+                            print(f"Processing {filename}...\n")
                             doc = parseDocument(filepath)
+
+                            # for checking purposes, uncomment if not needed
                             mdFilename = getFilename(filepath, 2)
                             writeToMarkdown(doc, mdFilename)
 
-                            documentMetadata = analyzeDocument(doc)
+                            documentMetadata = analyzeDocument(doc, filename)
                             jsonFilename = getFilename(filepath, 1)
                             json_path = os.path.join(os.path.dirname(filepath), jsonFilename)
                             writeToJSON(documentMetadata, json_path)
 
-                            print(f"Processed: {os.path.basename(filepath)}")
+                            print(f"Processed {filename}")
 
                             # READ TYPE FROM JSON
                             with open(json_path, 'r', encoding='utf-8') as f:
@@ -162,17 +166,15 @@ class MainWindow(QMainWindow):
                             filename = os.path.basename(filepath)
                             destination_path = os.path.join(type_folder_path, filename)
                             shutil.move(filepath, destination_path)
-                            print(f"Moved to destination: {destination_path}")
+                            print(f"Moved file to destination: {destination_path}")
 
                             # MOVE JSON FILE
                             json_destination_path = os.path.join(type_folder_path, jsonFilename)
                             shutil.move(json_path, json_destination_path)
-                            print(f"Moved JSON to destination: {json_destination_path}")
-
-                            
+                            print(f"Generated JSON file at destination")
 
                         except Exception as e:
-                            print(f"Error processing {filepath}: {e}")
+                            print(f"Error processing {filename}: {e}")
                 else:
                     time.sleep(1)  # avoid busy waiting
 
