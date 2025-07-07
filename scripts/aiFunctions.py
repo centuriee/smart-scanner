@@ -16,6 +16,7 @@ class Metadata(BaseModel):
 class Classification(BaseModel):
     subject: str
     type: str
+    year_processed: str
     funding: Optional[str] = None
 
 class Document(BaseModel):
@@ -27,21 +28,25 @@ def analyzeDocument(doc, filename) -> Document:
     # classification prompt
     classifyPrompt = f'''{doc}
 
-    QUERY: You are a model tasked to decipher and identify the complete subject and classification of the inputted document. There are 7 ways to classify a document: 
+    QUERY: You are tasked with identifying the subject, classification type, year processed, and funding (if applicable) from the given document with filename {filename}.
 
-    - ACA (academic)
-    - ADM (administration and management)
-    - CRE (creative work, research and extension)
-        - under CRE, there are two funding types: INT (internally) and EXT (externally). if the document is not CRE, funding must be NULL.
-    - FIN (financial)
-    - LEG (legal)
-    - PER (personnel)
-    - SAS (student affairs and services)
+    Instructions:  
 
-    The subject is usually indicated near the start of the document. However, if it is difficult to determine the subject from the content, you must use the full filename of the document as the subject: {filename}. Ensure that the capitalization matches the filename exactly.
-
-    For the type and funding of the application, simply write the three letter code.
-    
+    Subject. The subject is usually found at the beginning of the document. If the subject is not clearly stated in the content, use the full filename  as the subject. Make sure to match the capitalization and formatting of the filename exactly. Example: If the filename is Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024.md, then the subject should be: Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024
+             
+    Year Processed. Look for a date mentioned at the start of the document. Extract the year from that date. Example: If the date is October 1, 2024, the year processed is 2024.
+        
+    Classification Type. Classify the document using one of these seven categories:
+        ACA : Academic
+        ADM : Administration and Management
+        CRE : Creative Work, Research, and Extension
+        FIN : Financial
+        LEG : Legal
+        PER : Personnel
+        SAS : Student Affairs and Services
+             
+        If the document is classified as CRE, determine the funding source: INT (internally funded), or EXT (externally funded). If the document is not CRE, the funding field must be set to null. For the type and funding, simply write the three letter code.
+         
     /nothink /no_think
     '''
 

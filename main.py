@@ -214,8 +214,8 @@ class MainWindow(QMainWindow):
                             self.append_to_terminal(f"{filename} successfully parsed.")
 
                             # for checking purposes, uncomment if not needed
-                            #mdFilename = getFilename(filepath, 2)
-                            #writeToMarkdown(doc, mdFilename)
+                            mdFilename = getFilename(filepath, 2)
+                            writeToMarkdown(doc, mdFilename)
 
                             self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)

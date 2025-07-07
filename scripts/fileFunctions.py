@@ -26,7 +26,7 @@ def getFilename(source, index):
         return f"{filename}.md"
     
 def writeToMarkdown(text, filename):
-    path = f"testDocuments/markdownFiles/{filename}"
+    path = f"testDocuments/{filename}"
     with open(path, "w", encoding = "utf-8") as f:
         f.write(text)
 
