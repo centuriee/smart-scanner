@@ -15,6 +15,7 @@ class Metadata(BaseModel):
 
 class Classification(BaseModel):
     subject: str
+    author: str
     type: str
     year_processed: str
     funding: Optional[str] = None
@@ -28,22 +29,24 @@ def analyzeDocument(doc, filename) -> Document:
     # classification prompt
     classifyPrompt = f'''{doc}
 
-    QUERY: You are tasked with identifying the subject, classification type, year processed, and funding (if applicable) from the given document with filename {filename}.
+    QUERY: You are tasked with identifying the subject, classification type, author, year processed, and funding (if applicable) from the given document with filename {filename}.
 
     Instructions:  
 
-    Subject. The subject is usually found at the beginning of the document. If the subject is not clearly stated in the content, use the full filename  as the subject. Make sure to match the capitalization and formatting of the filename exactly. Example: If the filename is Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024.md, then the subject should be: Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024
+    Subject. The subject is usually found at the beginning of the document. If the subject is not clearly stated in the content, use the full filename as the subject. Make sure to match the capitalization and formatting of the filename exactly. Example: If the filename is Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024.md, then the subject should be: Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024
+
+    Author of the Letter: Identify the person who signed or authored the letter. If the author's full name is provided (e.g., "May Anne Mata"), format the output as: Lastname INITIALS → Mata MA. If only a title or role is provided (e.g., "Director") and no name is given, simply write Unknown.
              
     Year Processed. Look for a date mentioned at the start of the document. Extract the year from that date. Example: If the date is October 1, 2024, the year processed is 2024.
         
     Classification Type. Classify the document using one of these seven categories:
-        ACA : Academic
-        ADM : Administration and Management
-        CRE : Creative Work, Research, and Extension
-        FIN : Financial
-        LEG : Legal
-        PER : Personnel
-        SAS : Student Affairs and Services
+        ACA : Academic (Academic Calendar, Class Records, Class Schedules, Course Outlines, Grades, Honorific Scholars, Student Records)
+        ADM : Administration and Management (Request for Travel, Equipment Usage, Room Usage, Research Load Credit (RLC), Admin Load Credit (ALC), Extension Load Credit (ELC), Research Proposals (not yet approve), International Publication Award (IPA) Applications, Letter Communications, Office Performance Commitment and Review (OPCR), Certifications)
+        CRE : Creative Work, Research, and Extension (Approved Research Projects (with Approved MOA, LIB, etc), Financial Reports, Liquidation Reports for In-house grants and API, Progress Reports, Terminal Reports, Project Extension Requests, Line-Item Budget (LIB))
+        FIN : Financial (Payment to suppliers, Purchase Order (PO), Budget Utilization, Salaries, Budget Proposals, Purchase Request (PR), Abstract of Price Quotations (APQ), Ledger, Requisition Issue Slip (RIS), Inspection and Acceptance Report (IAR), Inventory Custodian Slip (ICS), Property Acknowledgement Receipt (PAR))
+        LEG : Legal (MOU, MOA, NDA/NDU, SALN, other legal documents needing of notarization)
+        PER : Personnel (Personnel Accomplishment Reports, COS, IPCR, PES, DTR, Notice of Temporary Appointments, Additional Assignments)
+        SAS : Student Affairs and Services (Student Assistant Files, Internships, etc)
              
         If the document is classified as CRE, determine the funding source: INT (internally funded), or EXT (externally funded). If the document is not CRE, the funding field must be set to null. For the type and funding, simply write the three letter code.
          
