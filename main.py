@@ -136,10 +136,10 @@ class MainWindow(QMainWindow):
 
     def toggle_monitoring(self):
         if not self.monitoring:
-            self.append_to_terminal("<b>Program starting.</b>")
+            self.append_to_terminal("<b>File monitoring starting.</b>")
             self.start_observer()
         else:
-            self.append_to_terminal("<b>Program stopped.</b>")
+            self.append_to_terminal("<b>File monitoring stopped. Queued files will continue parsing.</b>")
             self.stop_observer()
 
     def append_to_terminal(self, text: str):
