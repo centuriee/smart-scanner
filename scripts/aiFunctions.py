@@ -35,9 +35,9 @@ def analyzeDocument(doc, filename) -> Document:
 
     Subject. The subject is usually found at the beginning of the document. If the subject is not clearly stated in the content, use the full filename as the subject. Make sure to match the capitalization and formatting of the filename exactly. Example: If the filename is Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024.md, then the subject should be: Letter of Appreciation_Webinar_ Ms. Narag_30 Sept 2024
 
-    Author of the Letter: Identify the person who signed or authored the letter. If the author's full name is provided (e.g., "May Anne Mata"), format the output as: Lastname INITIALS → Mata MA. If only a title or role is provided (e.g., "Director") and no name is given, simply write Unknown.
+    Author of the Letter: Identify the author of the letter based on the content of the document. If the author is not explicitly mentioned in the signature block (e.g., 'Sincerely, [Name]'), search for any mention of names in the body of the text, especially those associated with academic credentials (e.g., PhD), roles (e.g., Professor), or research papers. Consider those names as a potential candidate for the author of the letter. If the author's full name is provided (e.g., "May Anne Mata"), format the output as: Lastname INITIALS → Mata MA. If only a title or role is provided (e.g., "Director") and no name is given, simply write Unknown.
              
-    Year Processed. Look for a date mentioned at the start of the document. Extract the year from that date. Example: If the date is October 1, 2024, the year processed is 2024.
+    Year Processed. Extract the 'Year Processed' from the document by finding the first full date mentioned at the beginning of the text. This date will be in the format: [Day] [Month] [Year]. Extract only the year portion from this date. For example, if the date is '18 November 2024', then the Year Processed is '2024'. Do not extract years from other parts of the document unless no date is found at the top.
         
     Classification Type. Classify the document using one of these seven categories:
         ACA : Academic (Academic Calendar, Class Records, Class Schedules, Course Outlines, Grades, Honorific Scholars, Student Records)
@@ -48,7 +48,7 @@ def analyzeDocument(doc, filename) -> Document:
         PER : Personnel (Personnel Accomplishment Reports, COS, IPCR, PES, DTR, Notice of Temporary Appointments, Additional Assignments)
         SAS : Student Affairs and Services (Student Assistant Files, Internships, etc)
              
-        If the document is classified as CRE, determine the funding source: INT (internally funded), or EXT (externally funded). If the document is not CRE, the funding field must be set to null. For the type and funding, simply write the three letter code.
+    If the document is classified as CRE, determine the funding source: INT (internally funded), or EXT (externally funded). If the document is not CRE, the funding field must be set to null. For the type and funding, simply write the three letter code.
          
     /nothink /no_think
     '''
