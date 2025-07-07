@@ -136,10 +136,10 @@ class MainWindow(QMainWindow):
 
     def toggle_monitoring(self):
         if not self.monitoring:
-            self.append_to_terminal("Program starting.")
+            self.append_to_terminal("<b>Program starting.</b>")
             self.start_observer()
         else:
-            self.append_to_terminal("Program stopped.")
+            self.append_to_terminal("<b>Program stopped.</b>")
             self.stop_observer()
 
     def append_to_terminal(self, text: str):
@@ -208,7 +208,7 @@ class MainWindow(QMainWindow):
                             # PROCESSING
                             filename = getFilename(filepath, 0)
                             print(f"Processing {filename}...\n")
-                            self.append_to_terminal(f"Processing {filename}.")
+                            self.append_to_terminal(f"<b>Processing {filename}.</b>")
                             self.append_to_terminal("Starting parsing...")
                             doc = parseDocument(filepath)
                             self.append_to_terminal(f"{filename} successfully parsed.")
@@ -219,7 +219,7 @@ class MainWindow(QMainWindow):
 
                             self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)
-                            self.append_to_terminal(f"Metadata successfully extracted, document classified as {documentMetadata.classification.type.upper()}.")
+                            self.append_to_terminal(f"<b>Metadata successfully extracted, document classified as {documentMetadata.classification.type.upper()}</b>.")
                             jsonFilename = getFilename(filepath, 1)
                             json_path = os.path.join(os.path.dirname(filepath), jsonFilename)
                             writeToJSON(documentMetadata, json_path)
@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
                             self.append_to_terminal(f"JSON file created at {type_folder_path}.")
 
                         except Exception as e:
-                            print(f"Error processing {filename}: {e}")
+                            print(f"<b>Error processing {filename}: {e}</b>")
                 else:
                     time.sleep(1)  # avoid busy waiting
 
