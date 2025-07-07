@@ -33,7 +33,7 @@ def analyzeDocument(doc, filename) -> Document:
 
     Instructions:  
 
-    Subject. The subject should be a very concise summary of the document's main purpose or content. If the subject is not clearly stated in the content, generate a concise and accurate summary based on the information provided. Avoid using the filename directly unless no other content is available to form a summary. Maintain proper capitalization and formatting where appropriate.
+    Subject. The subject should be a very concise summary of the document's main purpose or content. If the subject is not clearly stated in the content, generate a concise and accurate summary based on the information provided. Avoid using the filename directly unless no other content is available to form a summary. Maintain proper capitalization and formatting where appropriate. Avoid using characters that cannot be used in a file name.
 
     Author of the Letter: Identify the author of the letter based on the content of the document. If the author is not explicitly mentioned in the signature block (e.g., 'Sincerely, [Name]'), search for any mention of names in the body of the text, especially those associated with academic credentials (e.g., PhD), roles (e.g., Professor), or research papers. Consider those names as a potential candidate for the author of the letter. If the author's full name is provided (e.g., "Gian Paolo Plariza Jr."), format the output as: Lastname Suffix (if applicable) INITIALS → Plariza Jr. GP. If only a title or role is provided (e.g., "Director") and no name is given, simply write Unknown.
              
