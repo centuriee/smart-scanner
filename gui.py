@@ -1,12 +1,10 @@
 import sys
 import os
-import re
 import shutil
 import time
 from datetime import datetime
 import threading
 import json
-from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
     QVBoxLayout, QPushButton, QLabel, QFileDialog, QTextEdit
@@ -39,14 +37,8 @@ class MyEventHandler(FileSystemEventHandler):
                 print(f"File moved -> added to bottom of stack: {event.dest_path}")
 
 class MainWindow(QMainWindow):
-    
-    clearQueueSignal = Signal()
-    appendQueueSignal = Signal(str)
-
     def __init__(self):
         super().__init__()
-        self.clearQueueSignal.connect(self.clear_queue)
-        self.appendQueueSignal.connect(self.append_to_queue)
         self.setWindowTitle("Directory Chooser + File Monitor")
         self.defaultDir = os.path.dirname(os.path.abspath(__file__))
         self.selectedSrc = self.defaultDir
@@ -146,12 +138,6 @@ class MainWindow(QMainWindow):
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.terminal.append(f"[{timestamp}] {text}")
 
-    def append_to_queue(self, text: str):
-        self.queue.append(text)
-
-    def clear_queue(self):
-        self.queue.clear()
-
     def start_observer(self):
         print("Starting observer and stack mover...")
         self.monitoring = True
@@ -189,19 +175,7 @@ class MainWindow(QMainWindow):
             while self.monitoring:
                 if file_stack:
                     with stack_lock:
-                        self.clearQueueSignal.emit()
-                        count = 0
-                        for item in reversed(file_stack):
-                            match = re.search(r'([^\\/]+\.pdf)$', item)
-                            if match:
-                                filename = match.group(1)
-                                if count == 0:
-                                    self.appendQueueSignal.emit(f">> {filename}\n")
-                                else:
-                                    self.appendQueueSignal.emit(f"[{count}] {filename}\n")
-                                count += 1
                         filepath = file_stack.pop()  # Top of the stack
-                    time.sleep(1) # for no crash
 
                     if os.path.exists(filepath):
                         try:
@@ -214,8 +188,8 @@ class MainWindow(QMainWindow):
                             self.append_to_terminal(f"{filename} successfully parsed.")
 
                             # for checking purposes, uncomment if not needed
-                            #mdFilename = getFilename(filepath, 2)
-                            #writeToMarkdown(doc, mdFilename)
+                            mdFilename = getFilename(filepath, 2)
+                            writeToMarkdown(doc, mdFilename)
 
                             self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)
