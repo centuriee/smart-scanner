@@ -29,19 +29,17 @@ def getFilename(source, index):
         return f"{filename}.md"
     
 def writeToMarkdown(text, filename):
-    with open(filename, "w", encoding = "utf-8") as f:
+    path = f"testDocuments/{filename}"
+    with open(path, "w", encoding = "utf-8") as f:
         f.write(text)
 
-    print(f"\nSaved Markdown to {filename}") # success
+    print(f"\nSaved Markdown to {path}") # success
 
-def writeToJSON(data, filename, source_path):
-    dir_path = os.path.dirname(source_path)  # get directory of the source file
-    full_path = os.path.join(dir_path, filename)  # full path for saving JSON
-
-    with open(full_path, "w", encoding="utf-8") as f:
-        json.dump(data.model_dump(), f, ensure_ascii=False, indent=4)
-
-    print(f"\nSaved JSON to {full_path}") 
+def writeToJSON(data, filename):
+    with open(filename, "w", encoding = "utf-8") as f:
+        json.dump(data.model_dump(), f, ensure_ascii = False, indent = 4)
+        
+    print(f"\nSaved JSON to {filename}") 
 
 def getDefaultPath():
     return os.getcwd()  # Use current directory as default

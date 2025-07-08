@@ -237,6 +237,7 @@ class MainWindow(QMainWindow):
                             # CREATE FOLDER IF NEEDED
                             type_folder_path = os.path.join(self.selectedDir, doc_type)
                             os.makedirs(type_folder_path, exist_ok=True)
+
                             # MOVE ORIGINAL FILE
                             filename = os.path.basename(filepath)
                             destination_path = os.path.join(type_folder_path, filename)
@@ -251,7 +252,7 @@ class MainWindow(QMainWindow):
                             self.append_to_terminal(f"JSON file created at {type_folder_path}.")
 
                         except Exception as e:
-                            print(f"<b>Error processing {filename}: {e}</b>")
+                            print(f"Error processing {filename}: {e}")
                 else:
                     time.sleep(1)  # avoid busy waiting
 
