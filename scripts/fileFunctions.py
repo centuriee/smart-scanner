@@ -75,3 +75,6 @@ def saveDestination(destination_path):
     config["destination_path"] = destination_path
     with open(CONFIG_PATH, 'w') as f:
         json.dump(config, f, indent=4)
+
+def sanitizeFilename(name):
+    return "".join(c for c in name if c.isalnum() or c in " _-").rstrip()

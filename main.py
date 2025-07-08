@@ -15,7 +15,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 from scripts.documentParser import parseDocument
-from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON, loadConfig, saveSource, saveDestination
+from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON, loadConfig, saveSource, saveDestination, sanitizeFilename
 from scripts.aiFunctions import analyzeDocument
 
 file_stack = []  # LIFO stack
@@ -231,29 +231,52 @@ class MainWindow(QMainWindow):
 
                             print(f"Processed {filename}")
 
-                            # READ TYPE FROM JSON
+                            
+                            # MOVE AND RENAME ORIGINAL FILE
+                            #filename = os.path.basename(filepath)
+                            #destination_path = os.path.join(type_folder_path, filename)
+                            #shutil.move(filepath, destination_path)
+                            #print(f"Moved file to destination: {type_folder_path}")
+                            #self.append_to_terminal(f"{filename} moved to {type_folder_path}.")
                             with open(json_path, 'r', encoding='utf-8') as f:
                                 json_data = json.load(f)
-
+                                
                             classification = json_data.get("classification", {})
-                            doc_type = classification.get("type", "Uncategorized")  # fallback if missing
+                            author = classification.get("author", "UnknownAuthor")
+                            subject = classification.get("subject", "NoSubject")
+                            year = classification.get("year_processed", "UnknownYear")
+                            original_filename = os.path.basename(filepath)
 
-                            # CREATE FOLDER IF NEEDED
-                            type_folder_path = os.path.join(self.selectedDir, doc_type)
-                            os.makedirs(type_folder_path, exist_ok=True)
+                            author_clean = sanitizeFilename(author) or "UnknownAuthor"
+                            subject_clean = sanitizeFilename(subject) or "NoSubject"
+                            year_clean = sanitizeFilename(year) or "UnknownYear"
 
-                            # MOVE ORIGINAL FILE
-                            filename = os.path.basename(filepath)
-                            destination_path = os.path.join(type_folder_path, filename)
+                            # Construct new filename
+                            file_ext = os.path.splitext(filepath)[1]  # Keeps original extension (e.g., .pdf)
+                            new_filename = f"{author_clean} - {subject_clean} - {year_clean}{file_ext}"
+                                                        
+                            # Ensure folder based on 'type' exists
+                            file_type = classification.get("type", "Uncategorized")
+                            type_folder = os.path.join(self.selectedDir, file_type)
+                            os.makedirs(type_folder, exist_ok=True)
+
+                            # Move the document file
+                            destination_path = os.path.join(type_folder, new_filename)
                             shutil.move(filepath, destination_path)
-                            print(f"Moved file to destination: {type_folder_path}")
-                            self.append_to_terminal(f"{filename} moved to {type_folder_path}.")
+                            print(f"Renamed file and moved file to destination: {destination_path}")
+                            self.append_to_terminal(f"{original_filename} has been renamed to {new_filename} and moved to {destination_path}")
 
-                            # MOVE JSON FILE
-                            json_destination_path = os.path.join(type_folder_path, jsonFilename)
+                            # Also move the JSON file with matching new filename
+                            json_filename = f"{author_clean} - {subject_clean} - {year_clean}.json"
+                            json_destination_path = os.path.join(type_folder, json_filename)
                             shutil.move(json_path, json_destination_path)
-                            print(f"Generated JSON file at destination")
-                            self.append_to_terminal(f"JSON file created at {type_folder_path}.")
+                            print(f"JSON file created at: {json_destination_path}")
+                            self.append_to_terminal(f"Associated JSON has been renamed to {json_filename} and moved to {json_destination_path}")
+                            # MOVE JSON FILE
+                            #json_destination_path = os.path.join(type_folder_path, jsonFilename)
+                            #shutil.move(json_path, json_destination_path)
+                            #print(f"Generated JSON file at destination")
+                            #self.append_to_terminal(f"JSON file created at {type_folder_path}.")
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
