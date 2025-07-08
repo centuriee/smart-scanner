@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
 
     def append_to_terminal(self, text: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
-        self.terminal.append(f"[{timestamp}] {text}")
+        self.terminal.append(f"<b></b>[{timestamp}] {text}")
 
     def append_to_queue(self, text: str):
         self.queue.append(text)
@@ -208,16 +208,20 @@ class MainWindow(QMainWindow):
                         try:
                             # PROCESSING
                             filename = getFilename(filepath, 0)
-                            print(f"Processing {filename}...\n")
+                            print(f"Processing {filename}\n")
                             self.append_to_terminal(f"<b>Processing {filename}.</b>")
+                            print(f"Parsing {filename}")
                             self.append_to_terminal("Starting parsing...")
-                            doc = parseDocument(filepath)
+                            doc = parseDocument(filepath) # parsing document
+                            print(f"{filename} parsed")
                             self.append_to_terminal(f"{filename} successfully parsed.")
+                            time.sleep(1) # giving the program a quick rest
 
                             # for checking purposes, uncomment if not needed
                             # mdFilename = getFilename(filepath, 2)
                             # writeToMarkdown(doc, mdFilename)
 
+                            print(f"Analyzing {filename}")
                             self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)
                             self.append_to_terminal(f"<b>Metadata successfully extracted, document classified as {documentMetadata.classification.type.upper()}</b>.")
