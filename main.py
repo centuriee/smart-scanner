@@ -15,7 +15,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 from scripts.documentParser import parseDocument
-from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON
+from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON, loadConfig, saveSource, saveDestination
 from scripts.aiFunctions import analyzeDocument
 
 file_stack = []  # LIFO stack
@@ -48,10 +48,9 @@ class MainWindow(QMainWindow):
         self.clearQueueSignal.connect(self.clear_queue)
         self.appendQueueSignal.connect(self.append_to_queue)
         self.setWindowTitle("Directory Chooser + File Monitor")
-        self.defaultDir = os.path.dirname(os.path.abspath(__file__))
-        self.selectedSrc = self.defaultDir
-        self.selectedDir = self.defaultDir
-
+        config = loadConfig()
+        self.selectedSrc = config.get("source_path")
+        self.selectedDir = config.get("destination_path")
         self.observer = None
         self.observer_thread = None
         self.mover_thread = None
@@ -83,7 +82,7 @@ class MainWindow(QMainWindow):
         topLayout.addLayout(self.queueWrapper, 1)
 
         self.sourceWrapper = QVBoxLayout()
-        self.labelsrc = QLabel(f"Default Source Directory: {self.defaultDir}")
+        self.labelsrc = QLabel(f"Default Source Directory: {self.selectedSrc}")
         self.labelsrc.setWordWrap(True)
         self.buttonSrc = QPushButton("Browse for Source")
         self.buttonSrc.clicked.connect(self.choose_src)
@@ -91,7 +90,7 @@ class MainWindow(QMainWindow):
         self.sourceWrapper.addWidget(self.buttonSrc)
 
         self.destinationWrapper = QVBoxLayout()
-        self.labeldst = QLabel(f"Default Destination Directory: {self.defaultDir}")
+        self.labeldst = QLabel(f"Default Destination Directory: {self.selectedDir}")
         self.labeldst.setWordWrap(True)
         self.buttonDst = QPushButton("Browse for Destination")
         self.buttonDst.clicked.connect(self.choose_dst)
@@ -119,7 +118,8 @@ class MainWindow(QMainWindow):
         if selected:
             self.selectedSrc = selected
             self.labelsrc.setText(f"Selected Directory: {selected}")
-            self.append_to_terminal(f"Source directory set to {selected}")
+            self.append_to_terminal(f"Source directory set and saved to {selected}")
+            saveSource(self.selectedSrc)
         else:
             self.labelsrc.setText("No directory selected.")
             self.append_to_terminal(f"Source directory set to none")
@@ -129,7 +129,8 @@ class MainWindow(QMainWindow):
         if selected:
             self.selectedDir = selected
             self.labeldst.setText(f"Selected Directory: {selected}")
-            self.append_to_terminal(f"Destination directory set to {selected}")
+            self.append_to_terminal(f"Destination directory set and saved to {selected}")
+            saveDestination(self.selectedDir)
         else:
             self.labeldst.setText("No directory selected.")
             self.append_to_terminal(f"Destination directory set to none")
