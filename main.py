@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
 
         # terminal
         self.terminalWrapper = QVBoxLayout()
-        self.terminal_label = QLabel("terminal")
+        self.terminal_label = QLabel("Terminal")
         self.terminal = QTextEdit()
         self.terminal.setReadOnly(True)
         self.terminalWrapper.addWidget(self.terminal_label)
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
 
         # queue
         self.queueWrapper = QVBoxLayout()
-        self.queue_label = QLabel("queue")
+        self.queue_label = QLabel("Queue")
         self.queue = QTextEdit()
         self.queue.setFixedWidth(200)
         self.queue.setReadOnly(True)
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         topLayout.addLayout(self.queueWrapper, 1)
 
         self.sourceWrapper = QVBoxLayout()
-        self.labelsrc = QLabel(f"Default Source Directory: {self.selectedSrc}")
+        self.labelsrc = QLabel(f"Source Folder: {self.selectedSrc}")
         self.labelsrc.setWordWrap(True)
         self.buttonSrc = QPushButton("Browse for Source")
         self.buttonSrc.clicked.connect(self.choose_src)
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         self.sourceWrapper.addWidget(self.buttonSrc)
 
         self.destinationWrapper = QVBoxLayout()
-        self.labeldst = QLabel(f"Default Destination Directory: {self.selectedDir}")
+        self.labeldst = QLabel(f"Destination Folder: {self.selectedDir}")
         self.labeldst.setWordWrap(True)
         self.buttonDst = QPushButton("Browse for Destination")
         self.buttonDst.clicked.connect(self.choose_dst)
@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
         selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selectedSrc)
         if selected:
             self.selectedSrc = selected
-            self.labelsrc.setText(f"Selected Directory: {selected}")
+            self.labelsrc.setText(f"Source Folder: {selected}")
             self.append_to_terminal(f"Source directory set and saved to {selected}")
             saveSource(self.selectedSrc)
         else:
@@ -142,7 +142,7 @@ class MainWindow(QMainWindow):
         selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selectedDir)
         if selected:
             self.selectedDir = selected
-            self.labeldst.setText(f"Selected Directory: {selected}")
+            self.labeldst.setText(f"Destination Folder: {selected}")
             self.append_to_terminal(f"Destination directory set and saved to {selected}")
             saveDestination(self.selectedDir)
         else:
@@ -204,9 +204,11 @@ class MainWindow(QMainWindow):
 
         # Start a thread to move files from stack
         def move_files():
+            queue_was_empty = False # flag for empty queue
             while self.monitoring:
                 self.clearQueueSignal.emit()
                 if file_stack:
+                    queue_was_empty = False
                     with stack_lock:
                         count = 0
                         for item in reversed(file_stack):
@@ -307,7 +309,11 @@ class MainWindow(QMainWindow):
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
                 else:
-                    time.sleep(1)  # avoid busy waiting
+                    # checker so that empty queue does not get printed forever and ever
+                    if not queue_was_empty:
+                        self.append_to_terminal("<b>Queue is empty, there are no files to process.</b>")
+                        queue_was_empty = True
+                    time.sleep(2)  # avoid busy waiting
 
         self.mover_thread = threading.Thread(target=move_files, daemon=True)
         self.mover_thread.start()
@@ -320,6 +326,6 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.resize(750, 500)
+    window.resize(800, 600)
     window.show()
     sys.exit(app.exec())
