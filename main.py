@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import threading
 import json
+from PySide6 import QtGui
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
@@ -160,6 +161,7 @@ class MainWindow(QMainWindow):
     def append_to_terminal(self, text: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.terminal.append(f"<b></b>[{timestamp}] {text}")
+        self.terminal.moveCursor(QtGui.QTextCursor.End)
 
     def append_to_queue(self, text: str):
         self.queue.append(text)
