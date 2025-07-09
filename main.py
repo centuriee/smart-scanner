@@ -22,9 +22,10 @@ file_stack = []  # LIFO stack
 stack_lock = threading.Lock()  # Ensure thread-safe access to the stack
 
 class MyEventHandler(FileSystemEventHandler):
-    def __init__(self, source_folder):
+    def __init__(self, source_folder, main_window):
         super().__init__()
         self.source_folder = source_folder
+        self.main_window = main_window
         self.allowed_extensions = {'.pdf', '.img'}
 
     def is_valid_file(self, filepath):
@@ -35,7 +36,7 @@ class MyEventHandler(FileSystemEventHandler):
         if not event.is_directory and self.is_valid_file(event.src_path):
             with stack_lock:
                 file_stack.insert(0, event.src_path)
-                self.append_to_terminal(f"File created -> added to bottom of stack: {event.src_path}")
+                self.main_window.append_to_terminal(f"New file detected: {os.path.splitext(os.path.basename(event.src_path))[0]}. Added to queue.")
         else:
             print(f"file not supported")
 
@@ -43,7 +44,7 @@ class MyEventHandler(FileSystemEventHandler):
         if not event.is_directory and self.is_valid_file(event.dest_path):
             with stack_lock:
                 file_stack.insert(0, event.dest_path)
-                self.append_to_terminal(f"File moved -> added to bottom of stack: {event.dest_path}")
+                self.main_window.append_to_terminal(f"New file detected: {os.path.splitext(os.path.basename(event.dest_path))[0]}. Added to queue.")
         else:
             print(f"file not supported")
 
@@ -178,13 +179,13 @@ class MainWindow(QMainWindow):
                 if self.is_valid_file(full_path):
                     with stack_lock:
                         file_stack.append(full_path)  # Add to top of stack
-                        self.terminal.append(f"Initial scan added: {full_path}")
+                        self.append_to_terminal(f"Initial file detected: {os.path.splitext(os.path.basename(full_path))[0]}. Added to queue.")
                 else: print("file not supported")
             
 
         # Start watchdog observer
         def run_observer():
-            event_handler = MyEventHandler(self.selectedSrc)
+            event_handler = MyEventHandler(self.selectedSrc, self)
             self.observer = Observer()
             self.observer.schedule(event_handler, self.selectedSrc, recursive=False)
             self.observer.start()
@@ -204,9 +205,9 @@ class MainWindow(QMainWindow):
         # Start a thread to move files from stack
         def move_files():
             while self.monitoring:
+                self.clearQueueSignal.emit()
                 if file_stack:
                     with stack_lock:
-                        self.clearQueueSignal.emit()
                         count = 0
                         for item in reversed(file_stack):
                             match = re.search(r'([^\\/]+\.pdf)$', item)
@@ -226,6 +227,9 @@ class MainWindow(QMainWindow):
                             filename = getFilename(filepath, 0)
                             print(f"Processing {filename}\n")
                             self.append_to_terminal(f"<b>Processing {filename}.</b>")
+
+                            time.sleep(1) # giving the program a quick rest
+
                             print(f"Parsing {filename}")
                             self.append_to_terminal("Starting parsing...")
                             doc = parseDocument(filepath) # parsing document
@@ -240,7 +244,7 @@ class MainWindow(QMainWindow):
                             print(f"Analyzing {filename}")
                             self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)
-                            self.append_to_terminal(f"<b>Metadata successfully extracted, document classified as {documentMetadata.classification.type.upper()}</b>.")
+                            self.append_to_terminal(f"Metadata successfully extracted, document classified as <b>{documentMetadata.classification.type.upper()}</b>.")
                             jsonFilename = getFilename(filepath, 1)
                             json_path = os.path.join(os.path.dirname(filepath), jsonFilename)
                             writeToJSON(documentMetadata, json_path)
@@ -276,23 +280,29 @@ class MainWindow(QMainWindow):
                             type_folder = os.path.join(self.selectedDir, file_type)
                             os.makedirs(type_folder, exist_ok=True)
 
+                            time.sleep(1) # giving the program a quick rest
+
                             # Move the document file
                             destination_path = os.path.join(type_folder, new_filename)
                             shutil.move(filepath, destination_path)
                             print(f"Renamed file and moved file to destination: {destination_path}")
-                            self.append_to_terminal(f"{original_filename} has been renamed to {new_filename} and moved to {destination_path}")
+                            self.append_to_terminal(f"{original_filename} has been renamed to {new_filename}.")
+
+                            time.sleep(1) # giving the program a quick rest
 
                             # Also move the JSON file with matching new filename
                             json_filename = f"{author_clean} - {subject_clean} - {year_clean}.json"
                             json_destination_path = os.path.join(type_folder, json_filename)
                             shutil.move(json_path, json_destination_path)
                             print(f"JSON file created at: {json_destination_path}")
-                            self.append_to_terminal(f"Associated JSON has been renamed to {json_filename} and moved to {json_destination_path}")
+                            self.append_to_terminal(f"{new_filename} and its associated JSON file has been moved to {type_folder}.")
                             # MOVE JSON FILE
                             #json_destination_path = os.path.join(type_folder_path, jsonFilename)
                             #shutil.move(json_path, json_destination_path)
                             #print(f"Generated JSON file at destination")
                             #self.append_to_terminal(f"JSON file created at {type_folder_path}.")
+
+                            self.append_to_terminal(f"<b>{new_filename} is finished processing.</b>")
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
