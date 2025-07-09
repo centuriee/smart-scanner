@@ -25,18 +25,27 @@ class MyEventHandler(FileSystemEventHandler):
     def __init__(self, source_folder):
         super().__init__()
         self.source_folder = source_folder
+        self.allowed_extensions = {'.pdf', '.img'}
+
+    def is_valid_file(self, filepath):
+        _, ext = os.path.splitext(filepath)
+        return ext.lower() in self.allowed_extensions
 
     def on_created(self, event):
-        if not event.is_directory:
+        if not event.is_directory and self.is_valid_file(event.src_path):
             with stack_lock:
                 file_stack.insert(0, event.src_path)
-                print(f"File created -> added to bottom of stack: {event.src_path}")
+                self.append_to_terminal(f"File created -> added to bottom of stack: {event.src_path}")
+        else:
+            print(f"file not supported")
 
     def on_moved(self, event):
-        if not event.is_directory:
+        if not event.is_directory and self.is_valid_file(event.dest_path):
             with stack_lock:
                 file_stack.insert(0, event.dest_path)
-                print(f"File moved -> added to bottom of stack: {event.dest_path}")
+                self.append_to_terminal(f"File moved -> added to bottom of stack: {event.dest_path}")
+        else:
+            print(f"file not supported")
 
 class MainWindow(QMainWindow):
     
@@ -113,6 +122,10 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(layout)
         self.setCentralWidget(centralWidget)
 
+    def is_valid_file(self, filepath):
+        _, ext = os.path.splitext(filepath)
+        return ext.lower() in {'.pdf', '.img'}
+
     def choose_src(self):
         selected = QFileDialog.getExistingDirectory(self, "Select Directory", self.selectedSrc)
         if selected:
@@ -162,9 +175,12 @@ class MainWindow(QMainWindow):
         for filename in os.listdir(self.selectedSrc):
             full_path = os.path.join(self.selectedSrc, filename)
             if os.path.isfile(full_path):
-                with stack_lock:
-                    file_stack.append(full_path)  # Add to top of stack
-                    print(f"Initial scan added: {full_path}")
+                if self.is_valid_file(full_path):
+                    with stack_lock:
+                        file_stack.append(full_path)  # Add to top of stack
+                        self.terminal.append(f"Initial scan added: {full_path}")
+                else: print("file not supported")
+            
 
         # Start watchdog observer
         def run_observer():
