@@ -257,11 +257,6 @@ class MainWindow(QMainWindow):
 
                             
                             # MOVE AND RENAME ORIGINAL FILE
-                            #filename = os.path.basename(filepath)
-                            #destination_path = os.path.join(type_folder_path, filename)
-                            #shutil.move(filepath, destination_path)
-                            #print(f"Moved file to destination: {type_folder_path}")
-                            #self.append_to_terminal(f"{filename} moved to {type_folder_path}.")
                             with open(json_path, 'r', encoding='utf-8') as f:
                                 json_data = json.load(f)
                                 
@@ -300,11 +295,6 @@ class MainWindow(QMainWindow):
                             shutil.move(json_path, json_destination_path)
                             print(f"JSON file created at: {json_destination_path}")
                             self.append_to_terminal(f"{new_filename} and its associated JSON file has been moved to {type_folder}.")
-                            # MOVE JSON FILE
-                            #json_destination_path = os.path.join(type_folder_path, jsonFilename)
-                            #shutil.move(json_path, json_destination_path)
-                            #print(f"Generated JSON file at destination")
-                            #self.append_to_terminal(f"JSON file created at {type_folder_path}.")
 
                             self.append_to_terminal(f"<b>{new_filename} is finished processing.</b>")
 
