@@ -5,7 +5,6 @@ import shutil
 import time
 from datetime import datetime
 import threading
-import json
 from PySide6 import QtGui
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
@@ -16,7 +15,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 from scripts.documentParser import parseDocument
-from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON, loadConfig, saveSource, saveDestination, sanitizeFilename
+from scripts.fileFunctions import getFilename, writeToMarkdown, writeToJSON, loadConfig, saveSource, saveDestination, sanitizeFilename, renameFile, moveDocument, moveJSON
 from scripts.aiFunctions import analyzeDocument
 
 file_stack = []  # LIFO stack
@@ -255,51 +254,21 @@ class MainWindow(QMainWindow):
 
                             print(f"Processed {filename}")
 
-                            
-                            # MOVE AND RENAME ORIGINAL FILE
-                            with open(json_path, 'r', encoding='utf-8') as f:
-                                json_data = json.load(f)
-                                
-                            classification = json_data.get("classification", {})
-                            author = classification.get("author", "UnknownAuthor")
-                            subject = classification.get("subject", "NoSubject")
-                            year = classification.get("year_processed", "UnknownYear")
-                            original_filename = os.path.basename(filepath)
+                            new_filename, classification, original_filename, author, subject, year = renameFile(json_path, filepath)
+                            self.append_to_terminal(f"{original_filename} has been renamed to <b>{new_filename}</b>.")
 
-                            author_clean = sanitizeFilename(author) or "UnknownAuthor"
-                            subject_clean = sanitizeFilename(subject) or "NoSubject"
-                            year_clean = sanitizeFilename(year) or "UnknownYear"
-
-                            # Construct new filename
-                            file_ext = os.path.splitext(filepath)[1]  # Keeps original extension (e.g., .pdf)
-                            new_filename = f"{author_clean} - {subject_clean} - {year_clean}{file_ext}"
-                                                        
-                            # Ensure folder based on 'type' exists
-                            file_type = classification.get("type", "Uncategorized")
-                            type_folder = os.path.join(self.selectedDir, file_type)
-                            os.makedirs(type_folder, exist_ok=True)
+                            destination_path = moveDocument(filepath, new_filename, classification.get("type", "Uncategorized"), self.selectedDir)
 
                             time.sleep(1) # giving the program a quick rest
 
-                            # Move the document file
-                            destination_path = os.path.join(type_folder, new_filename)
-                            shutil.move(filepath, destination_path)
-                            print(f"Renamed file and moved file to destination: {destination_path}")
-                            self.append_to_terminal(f"{original_filename} has been renamed to {new_filename}.")
+                            moveJSON(json_path, author, subject, year, classification.get("type", "Uncategorized"), self.selectedDir)
 
-                            time.sleep(1) # giving the program a quick rest
-
-                            # Also move the JSON file with matching new filename
-                            json_filename = f"{author_clean} - {subject_clean} - {year_clean}.json"
-                            json_destination_path = os.path.join(type_folder, json_filename)
-                            shutil.move(json_path, json_destination_path)
-                            print(f"JSON file created at: {json_destination_path}")
-                            self.append_to_terminal(f"{new_filename} and its associated JSON file has been moved to {type_folder}.")
-
+                            self.append_to_terminal(f"{new_filename} and its associated JSON file has been moved to {os.path.dirname(destination_path)}.")
                             self.append_to_terminal(f"<b>{new_filename} is finished processing.</b>")
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
+                            self.append_to_terminal(f"<b>Error processing {filename}: {e}</b>")
                 else:
                     # checker so that empty queue does not get printed forever and ever
                     if not queue_was_empty:
