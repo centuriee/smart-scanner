@@ -2,3 +2,17 @@ testDocuments/*
 *.json
 *.md
 __pycache__
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# PyInstaller
+dist/
+build/
+*.spec
+
+# System
+.DS_Store
+Thumbs.db
