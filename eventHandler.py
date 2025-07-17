@@ -22,7 +22,7 @@ class MyEventHandler(FileSystemEventHandler):
             with self.stack_lock:
                 self.file_stack.insert(0, event.src_path)
                 self.main_window.append_to_terminal(
-                    f"New file detected: {os.path.splitext(os.path.basename(event.src_path))[0]}. Added to queue."
+                    f"New file detected: <i>{os.path.splitext(os.path.basename(event.src_path))[0]}</i>. Added to queue."
                 )
         else:
             print("file not supported")
@@ -32,7 +32,7 @@ class MyEventHandler(FileSystemEventHandler):
             with self.stack_lock:
                 self.file_stack.insert(0, event.dest_path)
                 self.main_window.append_to_terminal(
-                    f"New file detected: {os.path.splitext(os.path.basename(event.dest_path))[0]}. Added to queue."
+                    f"New file detected: <i>{os.path.splitext(os.path.basename(event.dest_path))[0]}</i>. Added to queue."
                 )
         else:
             print("file not supported")

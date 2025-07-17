@@ -135,7 +135,7 @@ class MainWindow(QMainWindow):
 
     def append_to_terminal(self, text: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
-        self.terminal.append(f"<b></b>[{timestamp}] {text}")
+        self.terminal.append(f"<b></b><i></i>[{timestamp}] {text}")
         self.terminal.moveCursor(QtGui.QTextCursor.End)
 
     def append_to_queue(self, text: str):
@@ -156,7 +156,7 @@ class MainWindow(QMainWindow):
                 if self.is_valid_file(full_path):
                     with stack_lock:
                         file_stack.append(full_path)  # Add to top of stack
-                        self.append_to_terminal(f"Initial file detected: {os.path.splitext(os.path.basename(full_path))[0]}. Added to queue.")
+                        self.append_to_terminal(f"Initial file detected: <i>{os.path.splitext(os.path.basename(full_path))[0]}</i>. Added to queue.")
                 else: print("file not supported")
             
 
@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
                             # PROCESSING
                             filename = getFilename(filepath, 0)
                             print(f"Processing {filename}\n")
-                            self.append_to_terminal(f"<b>Processing {filename}.</b>")
+                            self.append_to_terminal(f"<b>Processing <i>{filename}</i>.</b>")
 
                             time.sleep(1) # giving the program a quick rest
 
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
                             print(f"Analyzing {filename}")
                             self.append_to_terminal("Starting document analysis...")
                             documentMetadata = analyzeDocument(doc, filename)
-                            self.append_to_terminal(f"Metadata successfully extracted, document classified as <b>{documentMetadata.classification.type.upper()}</b>.")
+                            self.append_to_terminal(f"Metadata successfully extracted, document classified as <b><i>{documentMetadata.classification.type.upper()}</i></b>.")
                             jsonFilename = getFilename(filepath, 1)
                             json_path = os.path.join(os.path.dirname(filepath), jsonFilename)
                             writeToJSON(documentMetadata, json_path)
@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
                             print(f"Processed {filename}")
 
                             new_filename, classification, original_filename, author, subject, year = renameFile(json_path, filepath)
-                            self.append_to_terminal(f"{original_filename} has been renamed to <b>{new_filename}</b>.")
+                            self.append_to_terminal(f"<i>{original_filename}</i> has been renamed to <b><i>{new_filename}</i></b>.")
 
                             destination_path = moveDocument(filepath, new_filename, classification.get("type", "Uncategorized"), self.selectedDir)
 
@@ -239,8 +239,8 @@ class MainWindow(QMainWindow):
 
                             moveJSON(json_path, author, subject, year, classification.get("type", "Uncategorized"), self.selectedDir)
 
-                            self.append_to_terminal(f"{new_filename} and its associated JSON file has been moved to {os.path.dirname(destination_path)}.")
-                            self.append_to_terminal(f"<b>{new_filename} is finished processing.</b>")
+                            self.append_to_terminal(f"<i>{new_filename}</i> and its associated JSON file has been moved to {os.path.dirname(destination_path)}.")
+                            self.append_to_terminal(f"<b><i>{new_filename}</i> is finished processing.</b>")
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
