@@ -4,7 +4,15 @@ import json
 import time
 import shutil
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../config.json")
+def get_config_path():
+    appdata_dir = os.environ.get("APPDATA")
+    app_folder = os.path.join(appdata_dir, "SmartScanner")
+
+    os.makedirs(app_folder, exist_ok = True)
+
+    return os.path.join(app_folder, "config.json")
+
+CONFIG_PATH = get_config_path()
 
 def getSource(parentFolder):
     source = parentFolder + input("Enter PDF name with extension (should be in testDocuments folder): ")
