@@ -67,7 +67,7 @@ def moveDocument(filepath, new_filename, file_type, destination_root):
 
     time.sleep(1) # giving the program a quick rest
 
-    destination_path = os.path.join(type_folder, new_filename)
+    destination_path = os.path.join(type_folder, f"[FOR REVIEW] {new_filename}")
     shutil.move(filepath, destination_path)
     print(f"Renamed file and moved file to destination: {destination_path}")
     return destination_path
