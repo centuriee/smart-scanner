@@ -1,7 +1,8 @@
 import os
 import sys
 import json
-
+import time
+import shutil
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../config.json")
 
@@ -16,7 +17,6 @@ def getSource(parentFolder):
         sys.exit(1)
     
     return source
-
 
 def getFilename(source, index):
     filename = os.path.splitext(os.path.basename(source))[0]
@@ -40,6 +40,44 @@ def writeToJSON(data, filename):
         json.dump(data.model_dump(), f, ensure_ascii = False, indent = 4)
         
     print(f"\nSaved JSON to {filename}") 
+
+def renameFile(json_path, filepath):
+    with open(json_path, 'r', encoding='utf-8') as f:
+        json_data = json.load(f)
+        
+    classification = json_data.get("classification", {})
+    author = classification.get("author", "UnknownAuthor")
+    subject = classification.get("subject", "NoSubject")
+    year = classification.get("year_processed", "UnknownYear")
+    original_filename = os.path.basename(filepath)
+
+    author_clean = sanitizeFilename(author) or "UnknownAuthor"
+    subject_clean = sanitizeFilename(subject) or "NoSubject"
+    year_clean = sanitizeFilename(year) or "UnknownYear"
+
+    # Construct new filename
+    file_ext = os.path.splitext(filepath)[1]
+    new_filename = f"{author_clean} - {subject_clean} - {year_clean}{file_ext}"
+
+    return new_filename, classification, original_filename, author_clean, subject_clean, year_clean
+    
+def moveDocument(filepath, new_filename, file_type, destination_root):
+    type_folder = os.path.join(destination_root, file_type)
+    os.makedirs(type_folder, exist_ok = True)
+
+    time.sleep(1) # giving the program a quick rest
+
+    destination_path = os.path.join(type_folder, f"[FOR REVIEW] {new_filename}")
+    shutil.move(filepath, destination_path)
+    print(f"Renamed file and moved file to destination: {destination_path}")
+    return destination_path
+
+def moveJSON(json_path, author, subject, year, file_type, destination_root):
+    json_filename = f"{author} - {subject} - {year}.json"
+    dest_folder = os.path.join(destination_root, file_type)
+    json_destination_path = os.path.join(dest_folder, json_filename)
+    shutil.move(json_path, json_destination_path)
+    print(f"JSON file created at: {json_destination_path}")
 
 def getDefaultPath():
     return os.getcwd()  # Use current directory as default
