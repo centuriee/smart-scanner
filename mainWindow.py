@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.clearQueueSignal.connect(self.clear_queue)
         self.appendQueueSignal.connect(self.append_to_queue)
-        self.setWindowTitle("Directory Chooser + File Monitor")
+        self.setWindowTitle("UPMIN OR Smart Scanner")
         config = loadConfig()
         self.selectedSrc = config.get("source_path")
         self.selectedDir = config.get("destination_path")
