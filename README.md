@@ -35,10 +35,10 @@ ollama pull qwen3
 
 - Right-click the .exe and **Run as Administrator**
 
-> This ensures required folders and configuration files are created correctly.
+> This ensures required modules are downloaded and created correctly.
 
 
-## How To Use
+## Usage
 
 1. Select the source and destination folders. This is where the program will monitor for new PDF files (source) and move the processed and classified files (destination).
 
