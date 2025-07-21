@@ -1,6 +1,7 @@
 testDocuments/*
 *.json
 *.md
+!README.md
 __pycache__
 
 # Python
