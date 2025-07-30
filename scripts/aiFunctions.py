@@ -125,4 +125,4 @@ def analyzeDocument(doc, filename) -> Document:
             if isinstance(value, str) and value.strip().lower() == "null":
                 setattr(metadata, field, None)
 
-    return Document(classification = classification, metadata = metadata)
+    return Document(classification = classification, metadata = metadata) # return structured document
