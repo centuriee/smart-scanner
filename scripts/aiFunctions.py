@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 # classes for JSON structuring
+# structure of metadata for CRE (Creative Work, Research, and Extension) documents
 class Metadata(BaseModel):
     title: str
     authors: list[str]
@@ -13,6 +14,7 @@ class Metadata(BaseModel):
     abstract: str
     keywords: list[str]
 
+# structure of classification information for all document types
 class Classification(BaseModel):
     subject: str
     author: str
@@ -20,13 +22,15 @@ class Classification(BaseModel):
     year_processed: str
     funding: Optional[str] = None
 
+# overall document structure which includes classification and optional metadata
 class Document(BaseModel):
     classification: Classification
     metadata: Optional[Metadata] = None
 
+# function to analyze a document and return a structured Document object
 def analyzeDocument(doc, filename) -> Document:
 
-    # classification prompt
+    # FIRST PROMPT: classification
     classifyPrompt = f'''{doc}
 
     QUERY: You are tasked with identifying the subject, classification type, author, year processed, and funding (if applicable) from the given document.
@@ -57,6 +61,7 @@ def analyzeDocument(doc, filename) -> Document:
     /nothink /no_think
     '''
 
+    # PASS PROMPT TO AI, output a JSON-structured response
     classifyResponse = chat(
         model = 'qwen3',
         messages = [
@@ -69,12 +74,14 @@ def analyzeDocument(doc, filename) -> Document:
         format = Classification.model_json_schema()
     )
 
+    # validate and parse the AI's response into a Classification object
     classification = Classification.model_validate_json(classifyResponse.message.content)
 
+    # ensure that funding is set to None if not CRE or explicitly set to "null"
     if classification.funding == "null" or classification.type.upper() != "CRE":
         classification.funding = None
 
-    # metadata prompt, ignore if not CRE
+    # SECOND PROMPT: metadata (ignore if not CRE)
     metadata = None
     if classification.type.upper() == "CRE":
         metadataPrompt = f'''{doc}
@@ -97,7 +104,7 @@ def analyzeDocument(doc, filename) -> Document:
         /nothink /no_think
         '''
 
-        # PASS PROMPT TO AI
+        # PASS PROMPT TO AI, output a JSON-structured response
         metadataResponse = chat(
             model = 'qwen3',
             messages = [
@@ -110,8 +117,10 @@ def analyzeDocument(doc, filename) -> Document:
             format = Metadata.model_json_schema()
         )
 
+        # validate and parse the response into a Metadata object
         metadata = Metadata.model_validate_json(metadataResponse.message.content)
 
+        # convert "null" strings to actual None values
         for field, value in metadata.model_dump().items():
             if isinstance(value, str) and value.strip().lower() == "null":
                 setattr(metadata, field, None)
