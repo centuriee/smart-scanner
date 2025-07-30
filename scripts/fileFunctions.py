@@ -111,7 +111,8 @@ def loadConfig():
         # Reset to defaults
         saveConfig(getDefaultPath(), getDefaultPath())
         return {"source": getDefaultPath(), "destination": getDefaultPath()}
-    
+
+# save the set src and dst folders to config file
 def saveConfig(source, destination):
     config = {
         "source_path": source.replace("\\", "/"),
@@ -120,17 +121,20 @@ def saveConfig(source, destination):
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent = 4)
 
+# update only src folder
 def saveSource(source_path):
     config = loadConfig()
     config["source_path"] = source_path
     with open(CONFIG_PATH, 'w') as f:
         json.dump(config, f, indent=4)
 
+# update only dst folder
 def saveDestination(destination_path):
     config = loadConfig()
     config["destination_path"] = destination_path
     with open(CONFIG_PATH, 'w') as f:
         json.dump(config, f, indent=4)
 
+# UNUSED FUNC
 def sanitizeFilename(name):
     return "".join(c for c in name if c.isalnum() or c in " _-").rstrip()
