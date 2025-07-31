@@ -274,10 +274,13 @@ class MainWindow(QMainWindow):
 
                             self.append_to_terminal(f"<i>{new_filename}</i> and its associated JSON file has been moved to {os.path.dirname(destination_path)}.")
                             self.append_to_terminal(f"<b><i>{new_filename}</i> is finished processing.</b>")
+                            self.clearQueueSignal.emit()
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
                             self.append_to_terminal(f"<b>Error processing {filename}: {e}</b>")
+                            self.clearQueueSignal.emit()
+                            self.stop_observer()
                 else:
                     # checker so that empty queue does not get printed forever and ever
                     if not queue_was_empty:
