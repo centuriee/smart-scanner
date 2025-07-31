@@ -22,9 +22,8 @@ class MyEventHandler(FileSystemEventHandler):
         if not event.is_directory and self.is_valid_file(event.src_path):
             with self.stack_lock:
                 self.file_stack.insert(0, event.src_path)
-                self.main_window.append_to_terminal(
-                    f"New file detected: <i>{os.path.splitext(os.path.basename(event.src_path))[0]}</i>. Added to queue."
-                )
+                self.main_window.append_to_terminal(f"New file detected: <i>{os.path.splitext(os.path.basename(event.src_path))[0]}</i>. Added to queue.")
+                print(f"on created {self.file_stack}")
         else:
             print("file not supported")
 
@@ -33,8 +32,7 @@ class MyEventHandler(FileSystemEventHandler):
         if not event.is_directory and self.is_valid_file(event.dest_path):
             with self.stack_lock:
                 self.file_stack.insert(0, event.dest_path)
-                self.main_window.append_to_terminal(
-                    f"New file detected: <i>{os.path.splitext(os.path.basename(event.dest_path))[0]}</i>. Added to queue."
-                )
+                self.main_window.append_to_terminal(f"New file detected: <i>{os.path.splitext(os.path.basename(event.dest_path))[0]}</i>. Added to queue.")
+                print(f"on moved {self.file_stack}")
         else:
             print("file not supported")
