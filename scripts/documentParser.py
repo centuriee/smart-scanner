@@ -1,8 +1,9 @@
+# RESOURCE: https://docling-project.github.io/docling/examples/minimal/
+
 from docling.document_converter import DocumentConverter
 
 def parseDocument(filename):
-    # ADJUST ENDPOINT IF NEEDED
-    pageRange = (1, 5)
+    pageRange = (1, 5) # adjust if needed
     converter = DocumentConverter()
     result = converter.convert(filename, page_range = pageRange)
 
