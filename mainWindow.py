@@ -119,10 +119,10 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(layout)
         self.setCentralWidget(centralWidget)
 
-    # HELPER: check if file is a supported doc, e.g. .pdf, .img (change soon)
+    # HELPER: check if file is a supported doc, e.g. .pdf (change soon)
     def is_valid_file(self, filepath):
         _, ext = os.path.splitext(filepath)
-        return ext.lower() in {'.pdf', '.img'}
+        return ext.lower() in {'.pdf'}
 
     # source folder picker method
     def choose_src(self):

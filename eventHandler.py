@@ -9,7 +9,7 @@ class MyEventHandler(FileSystemEventHandler):
         super().__init__()
         self.source_folder = source_folder          # folder being monitored
         self.main_window = main_window              # reference to the GUI's main window (for terminal printing)
-        self.allowed_extensions = {'.pdf', '.img'}  # supported file types
+        self.allowed_extensions = {'.pdf'}          # supported file types
         self.file_stack = stack                     # reference to the shared file stack
         self.stack_lock = lock                      # lock to prevent race conditions on the stack
 
