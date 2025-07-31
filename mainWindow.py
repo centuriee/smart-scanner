@@ -72,15 +72,14 @@ class MainWindow(QMainWindow):
         self.queueWrapper = QVBoxLayout()
         self.queue_label = QLabel("Queue")
         self.queue = QTextEdit()
-        self.queue.setFixedWidth(200)
         self.queue.setReadOnly(True)
         self.queueWrapper.addWidget(self.queue_label)
         self.queueWrapper.addWidget(self.queue)
 
-        # top layer of app: terminal 3/4, queue 1/4
+        # top layer of app: terminal 5/7, queue 2/7
         topLayout = QHBoxLayout()
-        topLayout.addLayout(self.terminalWrapper, 3)
-        topLayout.addLayout(self.queueWrapper, 1)
+        topLayout.addLayout(self.terminalWrapper, 5)
+        topLayout.addLayout(self.queueWrapper, 2)
 
         # source folder selection
         self.sourceWrapper = QVBoxLayout()
