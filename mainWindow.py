@@ -72,15 +72,14 @@ class MainWindow(QMainWindow):
         self.queueWrapper = QVBoxLayout()
         self.queue_label = QLabel("Queue")
         self.queue = QTextEdit()
-        self.queue.setFixedWidth(200)
         self.queue.setReadOnly(True)
         self.queueWrapper.addWidget(self.queue_label)
         self.queueWrapper.addWidget(self.queue)
 
-        # top layer of app: terminal 3/4, queue 1/4
+        # top layer of app: terminal 5/7, queue 2/7
         topLayout = QHBoxLayout()
-        topLayout.addLayout(self.terminalWrapper, 3)
-        topLayout.addLayout(self.queueWrapper, 1)
+        topLayout.addLayout(self.terminalWrapper, 5)
+        topLayout.addLayout(self.queueWrapper, 2)
 
         # source folder selection
         self.sourceWrapper = QVBoxLayout()
@@ -119,10 +118,10 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(layout)
         self.setCentralWidget(centralWidget)
 
-    # HELPER: check if file is a supported doc, e.g. .pdf, .img (change soon)
+    # HELPER: check if file is a supported doc, e.g. .pdf (change soon)
     def is_valid_file(self, filepath):
         _, ext = os.path.splitext(filepath)
-        return ext.lower() in {'.pdf', '.img'}
+        return ext.lower() in {'.pdf'}
 
     # source folder picker method
     def choose_src(self):
@@ -154,7 +153,7 @@ class MainWindow(QMainWindow):
             self.append_to_terminal("<b>File monitoring starting.</b>")
             self.start_observer()
         else:
-            self.append_to_terminal("<b>File monitoring stopped. Queued files will continue parsing.</b>")
+            self.append_to_terminal("<b>File monitoring stopped. File currently processed will continue processing.</b>")
             self.stop_observer()
 
     # adding text to pseudoterminal panel with timestamp
@@ -180,13 +179,17 @@ class MainWindow(QMainWindow):
         # scan directory and add preexisting files to queue
         for filename in os.listdir(self.selectedSrc):
             full_path = os.path.join(self.selectedSrc, filename)
-            if os.path.isfile(full_path):
-                if self.is_valid_file(full_path):
-                    with stack_lock:
+            if os.path.isfile(full_path) and self.is_valid_file(full_path):
+                with stack_lock:
+                    if full_path not in file_stack:
                         file_stack.append(full_path)
                         self.append_to_terminal(f"Initial file detected: <i>{os.path.splitext(os.path.basename(full_path))[0]}</i>. Added to queue.")
-                else: print("file not supported")
-            
+                    else:
+                        print(f"{full_path} already in queue. Skipping.")
+            else:
+                print(f"{full_path} not supported or is not a file.")
+        
+        print(file_stack)
 
         # watchdog folder monitoring
         def run_observer():
@@ -233,7 +236,7 @@ class MainWindow(QMainWindow):
                         try:
                             # PROCESSING
                             filename = getFilename(filepath, 0)
-                            print(f"Processing {filename}\n")
+                            print(f"Processing {filename}")
                             self.append_to_terminal(f"<b>Processing <i>{filename}</i>.</b>")
                             time.sleep(1)
 
@@ -274,10 +277,13 @@ class MainWindow(QMainWindow):
 
                             self.append_to_terminal(f"<i>{new_filename}</i> and its associated JSON file has been moved to {os.path.dirname(destination_path)}.")
                             self.append_to_terminal(f"<b><i>{new_filename}</i> is finished processing.</b>")
+                            self.clearQueueSignal.emit()
 
                         except Exception as e:
                             print(f"Error processing {filename}: {e}")
                             self.append_to_terminal(f"<b>Error processing {filename}: {e}</b>")
+                            self.clearQueueSignal.emit()
+                            self.stop_observer()
                 else:
                     # checker so that empty queue does not get printed forever and ever
                     if not queue_was_empty:

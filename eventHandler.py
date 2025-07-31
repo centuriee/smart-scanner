@@ -9,7 +9,7 @@ class MyEventHandler(FileSystemEventHandler):
         super().__init__()
         self.source_folder = source_folder          # folder being monitored
         self.main_window = main_window              # reference to the GUI's main window (for terminal printing)
-        self.allowed_extensions = {'.pdf', '.img'}  # supported file types
+        self.allowed_extensions = {'.pdf'}          # supported file types
         self.file_stack = stack                     # reference to the shared file stack
         self.stack_lock = lock                      # lock to prevent race conditions on the stack
 
@@ -22,9 +22,8 @@ class MyEventHandler(FileSystemEventHandler):
         if not event.is_directory and self.is_valid_file(event.src_path):
             with self.stack_lock:
                 self.file_stack.insert(0, event.src_path)
-                self.main_window.append_to_terminal(
-                    f"New file detected: <i>{os.path.splitext(os.path.basename(event.src_path))[0]}</i>. Added to queue."
-                )
+                self.main_window.append_to_terminal(f"New file detected: <i>{os.path.splitext(os.path.basename(event.src_path))[0]}</i>. Added to queue.")
+                print(f"on created {self.file_stack}")
         else:
             print("file not supported")
 
@@ -33,8 +32,7 @@ class MyEventHandler(FileSystemEventHandler):
         if not event.is_directory and self.is_valid_file(event.dest_path):
             with self.stack_lock:
                 self.file_stack.insert(0, event.dest_path)
-                self.main_window.append_to_terminal(
-                    f"New file detected: <i>{os.path.splitext(os.path.basename(event.dest_path))[0]}</i>. Added to queue."
-                )
+                self.main_window.append_to_terminal(f"New file detected: <i>{os.path.splitext(os.path.basename(event.dest_path))[0]}</i>. Added to queue.")
+                print(f"on moved {self.file_stack}")
         else:
             print("file not supported")

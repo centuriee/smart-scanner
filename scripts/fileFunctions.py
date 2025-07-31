@@ -93,7 +93,7 @@ def moveJSON(json_path, author, subject, year, file_type, destination_root):
     dest_folder = os.path.join(destination_root, file_type)
     json_destination_path = os.path.join(dest_folder, json_filename)
     shutil.move(json_path, json_destination_path)
-    print(f"JSON file created at: {json_destination_path}")
+    print(f"JSON file created at: {json_destination_path}\n")
 
 # return working directory
 def getDefaultPath():
